@@ -3,10 +3,10 @@
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
-    <meta
+    <!-- <meta
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
+    /> -->
 
     <!-- Bootstrap CSS -->
     <link
@@ -38,11 +38,6 @@
 
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
-              <li class="nav-item active">
-                <a class="nav-link" href="#"
-                  >Home <span class="sr-only">(current)</span></a
-                >
-              </li>
               <li class="nav-item dropdown">
                 <a
                   class="nav-link dropdown-toggle"
@@ -116,35 +111,25 @@
                   autocomplete="off"
                   checked
                 />
-                Block Nodes
+                Wall Block
               </label>
-              <label class="btn btn-outline-secondary">
+              <label class="btn btn-outline-primary">
                 <input
                   type="radio"
                   name="selectionMode"
                   value="1"
                   autocomplete="off"
                 />
-                Clear Nodes
+                Start Block
               </label>
-              <label class="btn btn-outline-success">
+              <label class="btn btn-outline-danger">
                 <input
                   type="radio"
                   name="selectionMode"
                   value="2"
                   autocomplete="off"
-                  checked
                 />
-                Set Start Node
-              </label>
-              <label class="btn btn-outline-warning">
-                <input
-                  type="radio"
-                  name="selectionMode"
-                  value="3"
-                  autocomplete="off"
-                />
-                Set Ends Node
+                Target Block
               </label>
             </div>
           </div>
@@ -227,7 +212,6 @@
       paper.install(window);
       $(document).ready(function(_) {
         paper.setup("graph-canvas");
-
         init();
       });
     </script>
