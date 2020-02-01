@@ -1,6 +1,7 @@
 // Runners
 class Runner {
-  constructor() {
+  constructor(name) {
+    this.name = name;
     this.timer = null;
     this.fixedTimer = null;
     this.finish = null;
@@ -52,19 +53,53 @@ class Runner {
   fixedFrames() {}
 }
 
+class NodeSetter extends Runner {
+  constructor(name) {
+    super(name);
+    this.__startNode = null;
+    this.__endNode = null;
+  }
+
+  setNode(start, end) {
+    this.__startNode = start;
+    this.__endNode = end;
+  }
+
+  get startNode() {
+    return this.__startNode;
+  }
+
+  get endNode() {
+    return this.__endNode;
+  }
+}
 // Depth First Search
-class DfsRunner extends Runner {
-  constructor(startNode, endNode) {
-    super();
+class DfsRunner extends NodeSetter {
+  constructor() {
+    super("Depth First Search");
     this.stack = null;
     this.set = null;
-    this.startNode = startNode;
-    this.endNode = endNode;
+    this.path = null;
+    this.parent = null;
+  }
+
+  mapPath() {
+    this.path = [];
+    let i = 0;
+    let node = this.endNode;
+    while (node != null && i < 1000) {
+      this.path.push(node);
+      node = this.parent.get(node.id);
+      i++;
+    }
+    this.path.pop();
+    this.count = this.path.length;
   }
 
   firstFrame() {
     this.stack = [];
     this.set = new Set();
+    this.parent = new Map();
     this.stack.push(this.startNode);
     this.finish = false;
   }
@@ -75,6 +110,7 @@ class DfsRunner extends Runner {
       if (node.id == this.endNode.id) {
         this.finish = true;
         this.stop();
+        this.mapPath();
         return;
       }
       if (!this.set.has(node) && node) {
@@ -82,25 +118,35 @@ class DfsRunner extends Runner {
 
         node.id != this.startNode.id ? node.setAsTraversed() : null;
         this.stack.push(...node.adjacents.values());
+
+        node.adjacents.forEach(r => {
+          if (!this.set.has(r)) {
+            this.parent.set(r.id, node);
+          }
+        });
       }
     } else {
       this.finish = true;
       this.stop();
+      this.mapPath();
       return;
     }
+  }
+
+  fixedFrames() {
+    const n = this.path.pop();
+    n.setAsPath();
   }
 }
 
 // Breadth First Search
-class BfsRunner extends Runner {
-  constructor(startNode, endNode) {
-    super();
+class BfsRunner extends NodeSetter {
+  constructor() {
+    super("Breadth First Search");
     this.queue = null;
     this.path = null;
     this.parent = null;
     this.set = null;
-    this.startNode = startNode;
-    this.endNode = endNode;
   }
 
   mapPath() {
@@ -171,6 +217,8 @@ const states = Object.freeze({
   width: $("#graph-canvas").width(),
   height: $("#graph-canvas").height(),
   actionPanel: $("#action-panel"),
+  algoSelection: $(".algo-selection"),
+  algoNameDisplay: $("#selected-algo-name"),
   Runners: {
     dfs: DfsRunner,
     bfs: BfsRunner
@@ -190,6 +238,7 @@ const COLORS = Object.freeze({
 
 const DEFAULT_BOX_SIZE = 30;
 const MAX_END_NODE_COUNT = 3;
+const DEFAULT_RUNNER_CODE = "dfs";
 
 const BOX_TYPES = Object.freeze({
   BLOCK: 0,
@@ -275,33 +324,35 @@ class GraphMatrix {
   }
 
   joinAdjacent(r, c) {
+    const node = this.nodes[r][c];
     const top = r > 0 ? this.nodes[r - 1][c] : null;
     const left = c > 0 ? this.nodes[r][c - 1] : null;
     const bottom = r < this.rowCount - 2 ? this.nodes[r + 1][c] : null;
     const right = c < this.columnCount - 2 ? this.nodes[r][c + 1] : null;
-    this.nodes[r][c].joinAdjacentNode(top);
-    this.nodes[r][c].joinAdjacentNode(left);
-    this.nodes[r][c].joinAdjacentNode(bottom);
-    this.nodes[r][c].joinAdjacentNode(right);
-    top != null ? top.joinAdjacentNode(this.nodes[r][c]) : null;
-    left != null ? left.joinAdjacentNode(this.nodes[r][c]) : null;
-    bottom != null ? bottom.joinAdjacentNode(this.nodes[r][c]) : null;
-    right != null ? right.joinAdjacentNode(this.nodes[r][c]) : null;
+    node.joinAdjacentNode(top);
+    node.joinAdjacentNode(left);
+    node.joinAdjacentNode(bottom);
+    node.joinAdjacentNode(right);
+    top != null ? top.joinAdjacentNode(node) : null;
+    left != null ? left.joinAdjacentNode(node) : null;
+    bottom != null ? bottom.joinAdjacentNode(node) : null;
+    right != null ? right.joinAdjacentNode(node) : null;
   }
 
   removeAdjacent(r, c) {
+    const node = this.nodes[r][c];
     const top = r > 0 ? this.nodes[r - 1][c] : null;
     const left = c > 0 ? this.nodes[r][c - 1] : null;
     const bottom = r < this.rowCount - 2 ? this.nodes[r + 1][c] : null;
     const right = c < this.columnCount - 2 ? this.nodes[r][c + 1] : null;
-    this.nodes[r][c].removeAdjacentNode(top);
-    this.nodes[r][c].removeAdjacentNode(left);
-    this.nodes[r][c].removeAdjacentNode(bottom);
-    this.nodes[r][c].removeAdjacentNode(right);
-    top != null ? top.removeAdjacentNode(this.nodes[r][c]) : null;
-    left != null ? left.removeAdjacentNode(this.nodes[r][c]) : null;
-    bottom != null ? bottom.removeAdjacentNode(this.nodes[r][c]) : null;
-    right != null ? right.removeAdjacentNode(this.nodes[r][c]) : null;
+    node.removeAdjacentNode(top);
+    node.removeAdjacentNode(left);
+    node.removeAdjacentNode(bottom);
+    node.removeAdjacentNode(right);
+    top != null ? top.removeAdjacentNode(node) : null;
+    left != null ? left.removeAdjacentNode(node) : null;
+    bottom != null ? bottom.removeAdjacentNode(node) : null;
+    right != null ? right.removeAdjacentNode(node) : null;
   }
 
   generateMatrix() {
@@ -447,6 +498,8 @@ class Grid {
     this.onStartEndSet = () => {};
     this.onRunnerStop = () => {};
     // this.onRunnerStart = () => {};
+
+    this.setRunner(DEFAULT_RUNNER_CODE);
   }
 
   getBoxSideLength() {
@@ -525,6 +578,7 @@ class Grid {
         }
       }
     }
+    console.log("fixing grid");
   }
 
   resetTraversal() {
@@ -554,7 +608,8 @@ class Grid {
     }
     START_NODE = null;
     END_NODE = null;
-    this.onStartEnd();
+    this.onStartEndSet();
+    this.runner ? this.runner.stop() : null;
   }
 
   paintGrid() {
@@ -575,14 +630,16 @@ class Grid {
     }
   }
 
+  setRunner(runnerCode) {
+    this.__runner = new states.Runners[runnerCode]();
+  }
+
   visualize(runnerCode) {
+    this.resetTraversal();
     this.fixedGrid();
-    this.__runner = new states.Runners[runnerCode](
-      this.getBox(...START_NODE),
-      this.getBox(...END_NODE)
-    );
-    this.__runner.init();
-    this.__runner.onStop = this.onRunnerStop;
+    this.runner.setNode(this.getBox(...START_NODE), this.getBox(...END_NODE));
+    this.runner.init();
+    this.runner.onStop = this.onRunnerStop;
     // this.__runner.onStart = this.onRunnerStart;
   }
 
@@ -682,6 +739,7 @@ var init = () => {
   states.rowCountInput.val(rowCount);
   states.columnCountInput.val(columnCount);
   states.boxSizeInput.val(boxSize);
+  states.algoNameDisplay.text("Depth First Search");
 
   states.rowCountInput.change(function(event) {
     rowCount = parseInt($(this).val()) || Math.trunc(states.height / t);
@@ -701,17 +759,24 @@ var init = () => {
   states.clearGraphBtn.click(function(event) {
     ActiveGrid.clearGrid();
     states.startStopBtn.text("Start").prop("disabled", false);
-    if (timer != null) {
-      clearTimeout(timer);
-      timer = null;
-    }
   });
   states.startStopBtn.click(function(event) {
-    ActiveGrid.resetTraversal();
-    ActiveGrid.visualize("dfs");
+    ActiveGrid.visualize();
     $(this)
       .text("Running..")
       .prop("disabled", true);
+  });
+  states.algoSelection.click(function(event) {
+    const algo = event.target.dataset["algo"];
+    if (ActiveGrid.runner && !ActiveGrid.runner.finish) {
+      ActiveGrid.runner.stop();
+    }
+    ActiveGrid.setRunner(algo);
+    ActiveGrid.resetTraversal();
+    if (START_NODE && END_NODE) {
+      states.actionPanel.removeClass("invisible");
+    }
+    states.algoNameDisplay.text(ActiveGrid.runner.name);
   });
 
   processGrid(rowCount, columnCount, states.width, states.height, boxSize);
