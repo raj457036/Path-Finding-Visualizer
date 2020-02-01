@@ -1,9 +1,0 @@
-{
-    "compilerOptions": {
-        "target": "ESNext",
-        "outDir": "src/scripts/js",
-        "rootDir": "src/scripts/ts",
-        "watch": true,
-        "lib": ["DOM", "ESNext"]
-    },
-}

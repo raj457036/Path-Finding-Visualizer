@@ -1,0 +1,15 @@
+html,
+body {
+  height: 100%;
+}
+
+.graph {
+  background: white;
+  border-top: 1px solid grey;
+  height: calc(100vh - 103px) !important;
+
+  canvas[resize] {
+    width: 100%;
+    height: 100%;
+  }
+}

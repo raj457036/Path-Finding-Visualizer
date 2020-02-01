@@ -14,12 +14,194 @@
       href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="src/style/css/main.css" />
 
-    <title>Hello, world!</title>
+    <title>AlogViz</title>
   </head>
 
   <body>
-    <h1>Hello, world!</h1>
+    <section class="container-fluid">
+      <section class="toolbar">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+          <a class="navbar-brand" href="#">AlgoViz</a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item active">
+                <a class="nav-link" href="#"
+                  >Home <span class="sr-only">(current)</span></a
+                >
+              </li>
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  id="fill-block"
+                  role="button"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  Fill Block
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item" href="#" onclick="fillBlock('fill1')"
+                    >Fill 1</a
+                  >
+                  <a class="dropdown-item" href="#" onclick="fillBlock('fill2')"
+                    >Fill 2</a
+                  >
+                </div>
+              </li>
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  id="algo-choice"
+                  role="button"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  Algorithm
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item" href="#" onclick="algoSelect('dfs')"
+                    >Depth First Search</a
+                  >
+                  <a class="dropdown-item" href="#" onclick="algoSelect('bfs')"
+                    >Breadth First Search</a
+                  >
+                </div>
+              </li>
+            </ul>
+
+            <ul class="navbar-nav ml-auto invisible" id="action-panel">
+              <li class="nav-item">
+                <button
+                  class="btn btn-outline-primary px-5"
+                  id="start-stop-btn"
+                >
+                  Start
+                </button>
+              </li>
+            </ul>
+          </div>
+        </nav>
+        <div class="d-flex">
+          <div class="p-2">
+            Mode
+            <div
+              class="btn-group btn-group-sm btn-group-toggle"
+              role="group"
+              aria-label="tool mode"
+              data-toggle="buttons"
+            >
+              <label class="btn btn-outline-secondary active">
+                <input
+                  type="radio"
+                  name="selectionMode"
+                  value="0"
+                  autocomplete="off"
+                  checked
+                />
+                Block Nodes
+              </label>
+              <label class="btn btn-outline-secondary">
+                <input
+                  type="radio"
+                  name="selectionMode"
+                  value="1"
+                  autocomplete="off"
+                />
+                Clear Nodes
+              </label>
+              <label class="btn btn-outline-success">
+                <input
+                  type="radio"
+                  name="selectionMode"
+                  value="2"
+                  autocomplete="off"
+                  checked
+                />
+                Set Start Node
+              </label>
+              <label class="btn btn-outline-warning">
+                <input
+                  type="radio"
+                  name="selectionMode"
+                  value="3"
+                  autocomplete="off"
+                />
+                Set Ends Node
+              </label>
+            </div>
+          </div>
+          <!-- rows input -->
+          <div class="p-2">
+            <div class="input-group input-group-sm">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroup-sizing-sm"
+                  >Rows</span
+                >
+              </div>
+              <input type="text" class="form-control" id="row-count" />
+            </div>
+          </div>
+          <!-- column input -->
+          <div class="p-2">
+            <div class="input-group input-group-sm">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroup-sizing-sm"
+                  >Columns</span
+                >
+              </div>
+              <input type="text" class="form-control" id="column-count" />
+            </div>
+          </div>
+          <!-- boxsize input -->
+          <div class="p-2">
+            <div class="input-group input-group-sm">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroup-sizing-sm"
+                  >Box Size</span
+                >
+              </div>
+              <input
+                type="text"
+                class="form-control"
+                id="box-size"
+                value="0"
+                placeholder="0 = auto"
+              />
+            </div>
+          </div>
+          <!-- algorithm name display and clear graph btn -->
+          <div class="p-2 ml-auto">
+            <span class="mr-3"
+              ><b>Algorithm: </b> <span id="selected-algo-name">...</span></span
+            >
+            <button class="btn btn-sm btn-secondary" id="clear-graph-btn">
+              Clear Graph
+            </button>
+          </div>
+        </div>
+      </section>
+      <section class="graph row">
+        <canvas id="graph-canvas" resize></canvas>
+      </section>
+    </section>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -35,5 +217,19 @@
       src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
       crossorigin="anonymous"
     ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.2/paper-full.min.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <script type="text/javascript" src="src/scripts/app.js"></script>
+    <script>
+      paper.install(window);
+      $(document).ready(function(_) {
+        paper.setup("graph-canvas");
+
+        init();
+      });
+    </script>
   </body>
 </html>
