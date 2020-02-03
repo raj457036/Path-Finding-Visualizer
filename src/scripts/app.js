@@ -376,7 +376,7 @@ function processGrid(rowCount, columnCount, width, height, boxSize) {
 
   states.Context.ActiveGrid.onRunnerStop = function() {
     // states.actionPanel.addClass("d-none");
-    states.startStopBtn.text("Start").prop("disabled", false);
+    states.startStopBtn.text("Visualize").prop("disabled", false);
     states.resetGraphBtn.show();
     states.clearGraphBtn.show();
     states.runnerDuration.text(
@@ -462,5 +462,6 @@ $(document).ready(function(_) {
 });
 
 $(function() {
+  $('[data-toggle="popover"]').popover();
   $('[data-toggle="tooltip"]').tooltip();
 });

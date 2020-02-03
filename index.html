@@ -125,7 +125,7 @@
       </nav>
       <section class="container-fluid">
         <section id="toolbar">
-          <div class="d-flex row justify-content-center px-3">
+          <div class="d-flex row justify-content-center px-2">
             <div class="pb-0 p-2">
               Mode
               <div
@@ -216,7 +216,9 @@
               </div>
             </div>
             <!-- algorithm name display and clear graph btn -->
-            <div class="pb-0 p-2 ml-md-auto">
+            <div
+              class="pb-0 p-2 d-flex justify-content-center align-items-center"
+            >
               <small class="mx-auto">
                 <b data-toggle="tooltip" title="Selected Algorithm">Algo: </b>
                 <span id="selected-algo-name">...</span>&nbsp;
@@ -233,6 +235,7 @@
               <button class="btn btn-sm btn-secondary" id="reset-graph-btn">
                 Reset Graph
               </button>
+              &nbsp;
               <button class="btn btn-sm btn-secondary" id="clear-graph-btn">
                 Clear Graph
               </button>

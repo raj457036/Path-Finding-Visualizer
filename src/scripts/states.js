@@ -7,9 +7,8 @@ const states = Object.freeze({
   clearGraphBtn: $("#clear-graph-btn"),
   resetGraphBtn: $("#reset-graph-btn"),
   startStopBtn: $(".start-stop-btn"),
-  width: window.innerWidth,
-  height:
-    window.innerHeight - ($("nav").height() + $("#toolbar").height() - 10),
+  width: $("#graph-canvas").width(),
+  height: $("#graph-canvas").height(),
   actionPanel: $(".action-panel"),
   algoSelection: $(".algo-selection"),
   speedSelection: $(".speed-selection"),
