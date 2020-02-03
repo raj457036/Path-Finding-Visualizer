@@ -1,472 +1,117 @@
-// Runners
-class Runner {
-  constructor(name) {
-    this.name = name;
-    this.timer = null;
-    this.fixedTimer = null;
-    this.finish = null;
-    this.count = 0;
-    this.onStop = () => {};
-    this.onStart = () => {};
-    this.onFrame = () => {};
-  }
-
-  recall() {
-    this.onFrame();
-    this.perFrame();
-    if (this.finish) {
-      this.fixedRecall();
-      return;
-    }
-    this.timer = setTimeout(() => this.recall(), SPEED);
-  }
-
-  init() {
-    this.onStart();
-    this.firstFrame();
-    this.timer = setTimeout(() => this.recall(), SPEED);
-  }
-
-  fixedRecall() {
-    let i = this.count;
-    this.fixedTimer = setInterval(() => {
-      if (i > 0) {
-        this.fixedFrames();
-        i--;
-      } else {
-        clearInterval(this.fixedTimer);
-      }
-    }, SPEED);
-  }
-
-  stop() {
-    clearTimeout(this.timer);
-    this.onStop();
-  }
-
-  firstFrame() {
-    throw new Error("need to be implemented");
-  }
-  perFrame() {
-    throw new Error("need to be implemented");
-  }
-  fixedFrames() {}
-}
-
-class NodeSetter extends Runner {
-  constructor(name) {
-    super(name);
-    this.__startNode = null;
-    this.__endNode = null;
-  }
-
-  setNode(start, end) {
-    this.__startNode = start;
-    this.__endNode = end;
-  }
-
-  get startNode() {
-    return this.__startNode;
-  }
-
-  get endNode() {
-    return this.__endNode;
-  }
-}
-// Depth First Search
-class DfsRunner extends NodeSetter {
-  constructor() {
-    super("Depth First Search");
-    this.stack = null;
-    this.set = null;
-    this.path = null;
-    this.parent = null;
-  }
-
-  mapPath() {
-    this.path = [];
-    let i = 0;
-    let node = this.endNode;
-    while (node != null && i < 1000) {
-      this.path.push(node);
-      node = this.parent.get(node.id);
-      i++;
-    }
-    this.path.pop();
-    this.count = this.path.length;
-  }
-
-  firstFrame() {
-    this.stack = [];
-    this.set = new Set();
-    this.parent = new Map();
-    this.stack.push(this.startNode);
-    this.finish = false;
-  }
-
-  perFrame() {
-    if (this.stack.length > 0) {
-      const node = this.stack.pop();
-      if (node.id == this.endNode.id) {
-        this.finish = true;
-        this.stop();
-        this.mapPath();
-        return;
-      }
-      if (!this.set.has(node) && node) {
-        this.set.add(node);
-
-        node.id != this.startNode.id ? node.setAsTraversed() : null;
-        this.stack.push(...node.adjacents.values());
-
-        node.adjacents.forEach(r => {
-          if (!this.set.has(r)) {
-            this.parent.set(r.id, node);
-          }
-        });
-      }
-    } else {
-      this.finish = true;
-      this.stop();
-      this.mapPath();
-      return;
-    }
-  }
-
-  fixedFrames() {
-    const n = this.path.pop();
-    n.setAsPath();
-  }
-}
-
-// Breadth First Search
-class BfsRunner extends NodeSetter {
-  constructor() {
-    super("Breadth First Search");
-    this.queue = null;
-    this.path = null;
-    this.parent = null;
-    this.set = null;
-  }
-
-  mapPath() {
-    this.path = [];
-    let i = 0;
-    let node = this.endNode;
-    while (node != null && i < 1000) {
-      this.path.push(node);
-      node = this.parent.get(node.id);
-      i++;
-    }
-    this.path.pop();
-    this.count = this.path.length;
-  }
-
-  firstFrame() {
-    this.queue = [];
-    this.parent = new Map();
-    this.set = new Set();
-    this.queue.push(this.startNode);
-    this.finish = false;
-  }
-
-  perFrame() {
-    if (this.queue.length > 0) {
-      const node = this.queue.shift();
-
-      if (node.id == this.endNode.id) {
-        this.finish = true;
-        this.stop();
-        this.mapPath();
-        return;
-      }
-
-      node.id != this.startNode.id ? node.setAsTraversed() : null;
-      if (!this.set.has(node)) {
-        this.set.add(node);
-        this.queue.push(...node.adjacents.values());
-        node.adjacents.forEach((r, i) => {
-          if (!this.set.has(r)) {
-            this.parent.set(r.id, node);
-          }
-        });
-      }
-    } else {
-      this.finish = true;
-      this.stop();
-      this.mapPath();
-      return;
-    }
-  }
-
-  fixedFrames() {
-    const n = this.path.pop();
-    n.setAsPath();
-  }
-}
-
-// constants
-const states = Object.freeze({
-  canvas: $("#graph-canvas"),
-  rowCountInput: $("#row-count"),
-  columnCountInput: $("#column-count"),
-  boxSizeInput: $("#box-size"),
-  toolModeInput: $("input[name=selectionMode]:radio"),
-  clearGraphBtn: $("#clear-graph-btn"),
-  startStopBtn: $("#start-stop-btn"),
-  width: $("#graph-canvas").width(),
-  height: $("#graph-canvas").height(),
-  actionPanel: $("#action-panel"),
-  algoSelection: $(".algo-selection"),
-  algoNameDisplay: $("#selected-algo-name"),
-  Runners: {
-    dfs: DfsRunner,
-    bfs: BfsRunner
-  }
-});
-
-const COLORS = Object.freeze({
-  BOX_BORDER_COLOR: "#192965",
-  BOX_TYPE_BLOCK_COLOR: "#192965",
-  BOX_TYPE_CLEAR_COLOR: "#fff",
-  BOX_TYPE_START_NODE_COLOR: "#007bff",
-  BOX_TYPE_END_NODE_COLOR: "#f0134d",
-  BOX_TYPE_TRAVERSED_NODE_COLOR: "#c3f0ca",
-  BOX_TYPE_PATH_NODE_COLOR: "#3fc5f0",
-  BOX_TYPE_ERROR_NODE_COLOR: "#6c757d"
-});
-
-const DEFAULT_BOX_SIZE = 30;
-const MAX_END_NODE_COUNT = 3;
-const DEFAULT_RUNNER_CODE = "dfs";
-
-const BOX_TYPES = Object.freeze({
-  BLOCK: 0,
-  CLEAR: 1,
-  START_NODE: 2,
-  END_NODE: 3,
-  TRAVERSED_NODE: 4,
-  PATH_NODE: 5,
-  ERROR_NODE: 6
-});
-
-const TOOL_MODE = Object.freeze({
-  WALL_NODES: 0,
-  START_NODE: 1,
-  TARGET_NODE: 2
-});
-
-const SPEEDS = Object.freeze({
-  FAST: 16,
-  MEDIUM: 32,
-  SLOW: 64
-});
-
-let ACTION_TOOL_MODE = TOOL_MODE.WALL_NODES;
-let START_NODE = null;
-let END_NODE = null;
-let ActiveGrid = null;
-let SPEED = SPEEDS.FAST;
-
-// utilities
-function uuidv4() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-    var r = (Math.random() * 16) | 0,
-      v = c == "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
-// classes
-
-class GraphNode {
-  constructor(value, id = uuidv4()) {
-    this.id = id;
-    this.value = value;
-    this.__adjacent = new Set();
-  }
-
-  joinAdjacentNode(node) {
-    if (node instanceof GraphNode) {
-      this.__adjacent.add(node);
-    }
-  }
-
-  removeAdjacentNode(node) {
-    if (node instanceof GraphNode && this.__adjacent.has(node)) {
-      this.__adjacent.delete(node);
-    }
-  }
-
-  get adjacents() {
-    return this.__adjacent;
-  }
-}
-
-class GraphMatrix {
-  constructor(rowCount, columnCount, nodeCls) {
-    this.rowCount = rowCount;
-    this.columnCount = columnCount;
-    this.__processed = false;
-    this.nodeCls = nodeCls;
-    this.__nodes = [];
-  }
-
-  generateNodes() {
-    for (let r = 0; r < this.rowCount; r++) {
-      const temp_row_nodes = [];
-      for (let c = 0; c < this.columnCount; c++) {
-        const node = new this.nodeCls([r, c]);
-        temp_row_nodes.push(node);
-      }
-      this.__nodes.push(temp_row_nodes);
-    }
-  }
-
-  joinAdjacent(r, c) {
-    const node = this.nodes[r][c];
-    const top = r > 0 ? this.nodes[r - 1][c] : null;
-    const left = c > 0 ? this.nodes[r][c - 1] : null;
-    const bottom = r < this.rowCount - 2 ? this.nodes[r + 1][c] : null;
-    const right = c < this.columnCount - 2 ? this.nodes[r][c + 1] : null;
-    node.joinAdjacentNode(top);
-    node.joinAdjacentNode(left);
-    node.joinAdjacentNode(bottom);
-    node.joinAdjacentNode(right);
-    top != null ? top.joinAdjacentNode(node) : null;
-    left != null ? left.joinAdjacentNode(node) : null;
-    bottom != null ? bottom.joinAdjacentNode(node) : null;
-    right != null ? right.joinAdjacentNode(node) : null;
-  }
-
-  removeAdjacent(r, c) {
-    const node = this.nodes[r][c];
-    const top = r > 0 ? this.nodes[r - 1][c] : null;
-    const left = c > 0 ? this.nodes[r][c - 1] : null;
-    const bottom = r < this.rowCount - 2 ? this.nodes[r + 1][c] : null;
-    const right = c < this.columnCount - 2 ? this.nodes[r][c + 1] : null;
-    node.removeAdjacentNode(top);
-    node.removeAdjacentNode(left);
-    node.removeAdjacentNode(bottom);
-    node.removeAdjacentNode(right);
-    top != null ? top.removeAdjacentNode(node) : null;
-    left != null ? left.removeAdjacentNode(node) : null;
-    bottom != null ? bottom.removeAdjacentNode(node) : null;
-    right != null ? right.removeAdjacentNode(node) : null;
-  }
-
-  generateMatrix() {
-    for (let r = 0; r < this.rowCount; r++) {
-      for (let c = 0; c < this.columnCount; c++) {
-        this.joinAdjacent(r, c);
-      }
-    }
-  }
-
-  process() {
-    this.generateNodes();
-    this.generateMatrix();
-    this.__processed = true;
-  }
-
-  get isProcessed() {
-    return this.__processed;
-  }
-
-  get nodeCount() {
-    return this.rowCount * this.columnCount;
-  }
-
-  get nodes() {
-    return this.__nodes;
-  }
-}
-
 // paper js related
 class Box extends GraphNode {
   constructor(value, id) {
     super(value, id);
     this.pointTL = null;
     this.pointBR = null;
-    this.nodeType = BOX_TYPES.CLEAR;
+    this.nodeType = states.BOX_TYPES.CLEAR;
     this.__path = null;
   }
 
   setAsStart() {
-    this.nodeType = BOX_TYPES.START_NODE;
-    this.__path.fillColor = COLORS.BOX_TYPE_START_NODE_COLOR;
+    this.nodeType = states.BOX_TYPES.START_NODE;
+    this.__path.fillColor = {
+      gradient: {
+        stops: states.COLORS.BOX_TYPE_START_NODE_COLORS
+      },
+      origin: this.path.bounds.topLeft,
+      destination: this.path.bounds.bottomRight
+    };
   }
 
   removeAsStart() {
-    if (this.nodeType == BOX_TYPES.START_NODE) {
-      this.nodeType = BOX_TYPES.CLEAR;
-      this.__path.fillColor = COLORS.BOX_TYPE_CLEAR_COLOR;
+    if (this.nodeType == states.BOX_TYPES.START_NODE) {
+      this.setAsClear();
     }
   }
 
   setAsEnd() {
-    this.nodeType = BOX_TYPES.END_NODE;
-    this.__path.fillColor = COLORS.BOX_TYPE_END_NODE_COLOR;
+    this.nodeType = states.BOX_TYPES.END_NODE;
+    this.__path.fillColor = {
+      gradient: {
+        stops: states.COLORS.BOX_TYPE_END_NODE_COLORS
+      },
+      origin: this.path.bounds.topLeft,
+      destination: this.path.bounds.rightCenter
+    };
   }
 
   removeAsEnd() {
-    if (this.nodeType == BOX_TYPES.END_NODE) {
-      this.nodeType = BOX_TYPES.CLEAR;
-      this.__path.fillColor = COLORS.BOX_TYPE_CLEAR_COLOR;
+    if (this.nodeType == states.BOX_TYPES.END_NODE) {
+      this.setAsClear();
     }
   }
 
   setAsClear() {
-    this.nodeType = BOX_TYPES.CLEAR;
-    this.__path.fillColor = COLORS.BOX_TYPE_CLEAR_COLOR;
+    this.nodeType = states.BOX_TYPES.CLEAR;
+    this.__path.fillColor = states.COLORS.BOX_TYPE_CLEAR_COLOR;
   }
 
   setAsBlock() {
-    this.nodeType = BOX_TYPES.BLOCK;
-    this.__path.fillColor = COLORS.BOX_TYPE_BLOCK_COLOR;
+    this.nodeType = states.BOX_TYPES.BLOCK;
+    this.path.tween(
+      {
+        fillColor: states.COLORS.BOX_TYPE_BLOCK_COLORS[0]
+      },
+      {
+        fillColor: states.COLORS.BOX_TYPE_BLOCK_COLORS[1]
+      },
+      600
+    );
   }
 
   setAsTraversed() {
-    if (this.nodeType == BOX_TYPES.BLOCK) {
-      this.nodeType = BOX_TYPES.ERROR_NODE;
-      this.__path.fillColor = COLORS.BOX_TYPE_ERROR_NODE_COLOR;
+    if (this.nodeType == states.BOX_TYPES.BLOCK) {
+      this.nodeType = states.BOX_TYPES.ERROR_NODE;
+      this.__path.fillColor = states.COLORS.BOX_TYPE_ERROR_NODE_COLOR;
     } else {
-      this.nodeType = BOX_TYPES.TRAVERSED_NODE;
-      this.__path.fillColor = COLORS.BOX_TYPE_TRAVERSED_NODE_COLOR;
+      this.nodeType = states.BOX_TYPES.TRAVERSED_NODE;
+      this.path.tween(
+        {
+          fillColor: states.COLORS.BOX_TYPE_TRAVERSED_NODE_COLORS[0]
+        },
+        {
+          fillColor: states.COLORS.BOX_TYPE_TRAVERSED_NODE_COLORS[1]
+        },
+        200
+      );
     }
   }
 
   setAsPath() {
-    if (this.nodeType == BOX_TYPES.TRAVERSED_NODE) {
-      this.nodeType = BOX_TYPES.PATH_NODE;
-      this.__path.fillColor = COLORS.BOX_TYPE_PATH_NODE_COLOR;
+    if (this.nodeType == states.BOX_TYPES.TRAVERSED_NODE) {
+      this.nodeType = states.BOX_TYPES.PATH_NODE;
+      this.path.tween(
+        {
+          fillColor: states.COLORS.BOX_TYPE_PATH_NODE_COLORS[0]
+        },
+        {
+          fillColor: states.COLORS.BOX_TYPE_PATH_NODE_COLORS[1]
+        },
+        300
+      );
     }
   }
 
   resetTraversed() {
     if (
-      this.nodeType == BOX_TYPES.TRAVERSED_NODE ||
-      this.nodeType == BOX_TYPES.PATH_NODE
+      this.nodeType == states.BOX_TYPES.TRAVERSED_NODE ||
+      this.nodeType == states.BOX_TYPES.PATH_NODE
     ) {
       this.setAsClear();
     }
   }
 
-  setAsFront() {
-    this.nodeType = BOX_TYPES.TRAVERSED_NODE;
-    this.__path.fillColor = "#000";
-  }
-
   getFillColor() {
     switch (this.nodeType) {
-      case BOX_TYPES.BLOCK:
-        return COLORS.BOX_TYPE_BLOCK_COLOR;
-      case BOX_TYPES.CLEAR:
-        return COLORS.BOX_TYPE_CLEAR_COLOR;
-      case BOX_TYPES.START_NODE:
-        return COLORS.BOX_TYPE_START_NODE_COLOR;
-      case BOX_TYPES.END_NODE:
-        return COLORS.BOX_TYPE_END_NODE_COLOR[0];
+      case states.BOX_TYPES.BLOCK:
+        return states.COLORS.BOX_TYPE_BLOCK_COLOR;
+      case states.BOX_TYPES.CLEAR:
+        return states.COLORS.BOX_TYPE_CLEAR_COLOR;
+      case states.BOX_TYPES.START_NODE:
+        return states.COLORS.BOX_TYPE_START_NODE_COLOR;
+      case states.BOX_TYPES.END_NODE:
+        return states.COLORS.BOX_TYPE_END_NODE_COLORS[0];
     }
   }
 
@@ -476,10 +121,13 @@ class Box extends GraphNode {
   }
 
   draw() {
-    this.__path = new Path.Rectangle(this.pointTL, this.pointBR);
-    this.__path.strokeColor = COLORS.BOX_BORDER_COLOR;
-    this.__path.fillColor = this.getFillColor();
-    this.__path.strokeWidth = 0.3;
+    this.__path = new paper.Path.Rectangle({
+      from: this.pointTL,
+      to: this.pointBR,
+      strokeColor: states.COLORS.BOX_BORDER_COLOR,
+      strokeWidth: 0.3,
+      fillColor: this.getFillColor()
+    });
   }
 
   get path() {
@@ -495,11 +143,14 @@ class Grid {
     this.boxSize = boxSize;
     this.__dragEnabled = false;
     this.__runner = null;
+    this.__start_node = null;
+    this.__end_node = null;
+    this.__action_mode = states.TOOL_MODE.WALL_NODES;
     this.onStartEndSet = () => {};
     this.onRunnerStop = () => {};
-    // this.onRunnerStart = () => {};
+    this.onRunnerStart = () => {};
 
-    this.setRunner(DEFAULT_RUNNER_CODE);
+    this.setRunner(states.DEFAULT_RUNNER_CODE);
   }
 
   getBoxSideLength() {
@@ -511,17 +162,32 @@ class Grid {
   }
 
   perfromAction(r, c) {
-    switch (ACTION_TOOL_MODE) {
-      case TOOL_MODE.START_NODE:
-        START_NODE = [r, c];
-        this.setStart();
+    const box = this.boxes[r][c];
+
+    switch (this.__action_mode) {
+      case states.TOOL_MODE.START_NODE:
+        if (!this.runner.running) {
+          this.__start_node = box;
+          this.setStart();
+        }
         break;
-      case TOOL_MODE.TARGET_NODE:
-        END_NODE = [r, c];
-        this.setEnd();
+      case states.TOOL_MODE.TARGET_NODE:
+        if (!this.runner.running) {
+          this.__end_node = box;
+          this.setEnd();
+        }
         break;
-      case TOOL_MODE.WALL_NODES:
-        if (this.boxes[r][c].nodeType == BOX_TYPES.BLOCK) {
+      case states.TOOL_MODE.WALL_NODES:
+        if (
+          this.runner.running &&
+          (box == this.__start_node ||
+            box == this.__end_node ||
+            box.nodeType == states.BOX_TYPES.TRAVERSED_NODE ||
+            box.nodeType == states.BOX_TYPES.PATH_NODE)
+        ) {
+          return;
+        }
+        if (box.nodeType == states.BOX_TYPES.BLOCK) {
           this.setClear(r, c);
         } else {
           this.setBlock(r, c);
@@ -532,21 +198,19 @@ class Grid {
 
   addEvents(box, r, c) {
     const self = this;
+    box.path.onMouseEnter = function(e) {
+      if (self.__dragEnabled) {
+        self.perfromAction(r, c);
+      }
+    };
+
     box.path.onMouseDown = function(event) {
+      event.preventDefault();
       self.__dragEnabled = true;
       self.perfromAction(r, c);
     };
     box.path.onMouseUp = function(event) {
       self.__dragEnabled = false;
-    };
-    box.path.onMouseEnter = function(event) {
-      this.selected = true;
-      if (self.__dragEnabled) {
-        self.perfromAction(r, c);
-      }
-    };
-    box.path.onMouseLeave = function(event) {
-      this.selected = false;
     };
   }
 
@@ -565,20 +229,23 @@ class Grid {
         this.boxes[r][c].removeAsStart();
       }
     }
-    this.setClear(...START_NODE);
-    this.boxes[START_NODE[0]][START_NODE[1]].setAsStart();
+    this.setClear(...this.startNode.value);
+    this.startNode.setAsStart();
     this.onStartEndSet();
+    this.setRunnerNodes();
   }
 
   fixedGrid() {
     for (let r = 0; r < this.graph.rowCount; r++) {
       for (let c = 0; c < this.graph.columnCount; c++) {
-        if (this.boxes[r][c].nodeType == BOX_TYPES.BLOCK) {
+        if (
+          this.boxes[r][c].nodeType == states.BOX_TYPES.BLOCK ||
+          this.boxes[r][c].nodeType == states.BOX_TYPES.ERROR_NODE
+        ) {
           this.setBlock(r, c);
         }
       }
     }
-    console.log("fixing grid");
   }
 
   resetTraversal() {
@@ -595,26 +262,31 @@ class Grid {
         this.boxes[r][c].removeAsEnd();
       }
     }
-    this.setClear(...END_NODE);
-    this.boxes[END_NODE[0]][END_NODE[1]].setAsEnd();
+    this.setClear(...this.__end_node.value);
+    this.__end_node.setAsEnd();
     this.onStartEndSet();
+    this.setRunnerNodes();
+
+    // if(this.)
   }
 
   clearGrid() {
-    for (let r = 0; r < this.graph.rowCount; r++) {
-      for (let c = 0; c < this.graph.columnCount; c++) {
-        this.setClear(r, c);
-      }
-    }
-    START_NODE = null;
-    END_NODE = null;
+    this.__start_node = null;
+    this.__end_node = null;
     this.onStartEndSet();
     this.runner ? this.runner.stop() : null;
+
+    setTimeout(() => {
+      for (let r = 0; r < this.graph.rowCount; r++) {
+        for (let c = 0; c < this.graph.columnCount; c++) {
+          this.setClear(r, c);
+        }
+      }
+    }, 300);
   }
 
   paintGrid() {
     const sideLength = this.boxSize || this.getBoxSideLength();
-
     for (let r = 0; r < this.graph.rowCount; r++) {
       for (let c = 0; c < this.graph.columnCount; c++) {
         const node = this.graph.nodes[r][c];
@@ -630,21 +302,37 @@ class Grid {
     }
   }
 
-  setRunner(runnerCode) {
-    this.__runner = new states.Runners[runnerCode]();
+  setRunnerNodes() {
+    this.runner.setNode(this.__start_node, this.__end_node);
   }
 
-  visualize(runnerCode) {
+  setRunner(runnerCode) {
+    this.__runner = new states.Runners[runnerCode](states.RunnerSpeeds.Fast);
+  }
+
+  setRunnerSpeed(speed) {
+    this.__runner.speed = speed;
+  }
+
+  visualize() {
+    this.setRunnerNodes();
     this.resetTraversal();
     this.fixedGrid();
-    this.runner.setNode(this.getBox(...START_NODE), this.getBox(...END_NODE));
-    this.runner.init();
-    this.runner.onStop = this.onRunnerStop;
-    // this.__runner.onStart = this.onRunnerStart;
+    this.__runner.onStart = this.onRunnerStart;
+    this.__runner.onStop = this.onRunnerStop;
+    this.__runner.init();
   }
 
   getBox(r, c) {
     return this.boxes[r][c];
+  }
+
+  set actionMode(mode) {
+    this.__action_mode = mode;
+  }
+
+  get actionMode() {
+    return this.__action_mode;
   }
 
   get boxes() {
@@ -657,89 +345,58 @@ class Grid {
   get runner() {
     return this.__runner;
   }
+
+  get startNode() {
+    return this.__start_node;
+  }
+
+  get endNode() {
+    return this.__end_node;
+  }
 }
 
 function processGrid(rowCount, columnCount, width, height, boxSize) {
   project.clear();
   const graph = new GraphMatrix(rowCount, columnCount, Box);
   graph.process();
-  ActiveGrid = new Grid(width, height, graph, boxSize);
-  ActiveGrid.paintGrid();
+  states.Context.ActiveGrid = new Grid(width, height, graph, boxSize);
+  states.Context.ActiveGrid.paintGrid();
 
-  ActiveGrid.onStartEndSet = function() {
-    if (START_NODE != null && END_NODE != null) {
-      states.actionPanel.removeClass("invisible");
+  states.Context.ActiveGrid.onStartEndSet = function() {
+    states.Context.ActiveGrid.resetTraversal();
+    if (
+      states.Context.ActiveGrid.startNode != null &&
+      states.Context.ActiveGrid.endNode != null
+    ) {
+      states.actionPanel.removeClass("d-none");
     } else {
-      states.actionPanel.addClass("invisible");
+      states.actionPanel.addClass("d-none");
     }
   };
 
-  ActiveGrid.onRunnerStop = function() {
-    states.actionPanel.addClass("invisible");
+  states.Context.ActiveGrid.onRunnerStop = function() {
+    // states.actionPanel.addClass("d-none");
     states.startStopBtn.text("Start").prop("disabled", false);
+    states.resetGraphBtn.show();
+    states.clearGraphBtn.show();
+    states.runnerDuration.text(
+      `${states.Context.ActiveGrid.runner.duration} ms`
+    );
     // states.toolModeInput.prop("disabled", false);
+    console.log(states.Context.ActiveGrid.runner.duration);
   };
-
-  // ActiveGrid.onRunnerStart = function() {
-  //   states.toolModeInput.prop("disabled", true);
-  // };
+  states.algoNameDisplay.text(states.Context.ActiveGrid.runner.name);
 }
 
-// settings
-class StateHandler {
-  constructor() {
-    this.__activeMode = TOOL_MODE.WALL_NODES;
-    this.__rowCount = null;
-    this.__columnCount = null;
-    this.__boxSize = null;
-    this.__width = null;
-    this.__height = null;
-  }
-
-  get activeMode() {
-    return this.__activeMode;
-  }
-
-  get rowCount() {
-    return this.__rowCount;
-  }
-
-  get columnCount() {
-    return this.__columnCount;
-  }
-
-  get boxSize() {
-    return this.__boxSize;
-  }
-
-  get height() {
-    return this.__height;
-  }
-  get width() {
-    return this.__width;
-  }
-
-  setState(state) {
-    this.__activeMode = state.get("activeMode") || this.__activeMode;
-    this.__rowCount = state.get("rowCount") || this.__rowCount;
-    this.__columnCount = state.get("columnCount") || this.__columnCount;
-    this.__activeMode = state.get("activeMode") || this.__activeMode;
-    this.__height = state.get("height") || this.__height;
-    this.__width = state.get("width") || this.__width;
-  }
-}
-
-const settings = new StateHandler();
-
-var init = () => {
-  let boxSize = DEFAULT_BOX_SIZE;
+function init() {
+  let boxSize = states.DEFAULT_BOX_SIZE;
   let columnCount = Math.trunc(states.width / boxSize);
   let rowCount = Math.trunc(states.height / boxSize);
 
   states.rowCountInput.val(rowCount);
   states.columnCountInput.val(columnCount);
   states.boxSizeInput.val(boxSize);
-  states.algoNameDisplay.text("Depth First Search");
+  states.resetGraphBtn.hide();
 
   states.rowCountInput.change(function(event) {
     rowCount = parseInt($(this).val()) || Math.trunc(states.height / t);
@@ -754,30 +411,56 @@ var init = () => {
     processGrid(rowCount, columnCount, states.width, states.height, boxSize);
   });
   states.toolModeInput.change(function(event) {
-    ACTION_TOOL_MODE = parseInt(this.value);
+    states.Context.ActiveGrid.actionMode = states.TOOL_MODE[this.value];
   });
   states.clearGraphBtn.click(function(event) {
-    ActiveGrid.clearGrid();
-    states.startStopBtn.text("Start").prop("disabled", false);
+    states.Context.ActiveGrid.clearGrid();
+    states.startStopBtn.text("Visualize").prop("disabled", false);
+  });
+  states.resetGraphBtn.click(function(event) {
+    states.Context.ActiveGrid.resetTraversal();
   });
   states.startStopBtn.click(function(event) {
-    ActiveGrid.visualize();
-    $(this)
-      .text("Running..")
-      .prop("disabled", true);
+    states.Context.ActiveGrid.visualize();
+    states.startStopBtn.text("Running..").prop("disabled", true);
+    states.runnerDuration.text("...");
+    states.resetGraphBtn.hide();
+    states.clearGraphBtn.hide();
   });
   states.algoSelection.click(function(event) {
     const algo = event.target.dataset["algo"];
-    if (ActiveGrid.runner && !ActiveGrid.runner.finish) {
-      ActiveGrid.runner.stop();
+    if (
+      states.Context.ActiveGrid.runner &&
+      !states.Context.ActiveGrid.runner.finish
+    ) {
+      states.Context.ActiveGrid.runner.stop();
     }
-    ActiveGrid.setRunner(algo);
-    ActiveGrid.resetTraversal();
-    if (START_NODE && END_NODE) {
+    states.Context.ActiveGrid.setRunner(algo);
+    states.Context.ActiveGrid.resetTraversal();
+    if (
+      states.Context.ActiveGrid.startNode &&
+      states.Context.ActiveGrid.endNode
+    ) {
       states.actionPanel.removeClass("invisible");
     }
-    states.algoNameDisplay.text(ActiveGrid.runner.name);
+    states.algoNameDisplay.text(states.Context.ActiveGrid.runner.name);
+  });
+
+  states.speedSelection.click(function(event) {
+    const speed = event.target.dataset["speed"];
+    states.Context.ActiveGrid.setRunnerSpeed(states.RunnerSpeeds[speed]);
+    states.speedNameDisplay.text(speed);
   });
 
   processGrid(rowCount, columnCount, states.width, states.height, boxSize);
-};
+}
+
+paper.install(window);
+$(document).ready(function(_) {
+  paper.setup("graph-canvas");
+  init();
+});
+
+$(function() {
+  $('[data-toggle="tooltip"]').tooltip();
+});
