@@ -7,6 +7,12 @@
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
+    <!-- font awasome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+      crossorigin="anonymous"
+    />
 
     <!-- Bootstrap CSS -->
     <link
@@ -21,17 +27,21 @@
 
   <body>
     <section id="home">
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand d-flex p-0">
+      <nav class="navbar navbar-expand-lg navbar-light bg-nav py-0">
+        <a class="navbar-brand d-flex">
           AlgoViz &nbsp;
           <div class="d-none action-panel d-md-none ">
-            <button class="btn btn-outline-primary btn-sm start-stop-btn">
+            <button class="btn btn-primary btn-sm start-stop-btn">
               Visualize
+            </button>
+            <button class="btn btn-white btn-sm next-step">
+              <i class="fa fa-step-forward"></i>
+              Next Step
             </button>
           </div>
         </a>
         <button
-          class="navbar-toggler p-1"
+          class="navbar-toggler p-0"
           type="button"
           data-toggle="collapse"
           data-target="#navbar"
@@ -51,10 +61,11 @@
                 id="fill-block"
                 role="button"
                 data-toggle="dropdown"
+                title="Create Wall Blocks"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                Fill Block
+                <i class="fa fa-th-large"></i> Create Blocks
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <a class="dropdown-item" onclick="fillBlock('fill1')">Fill 1</a>
@@ -68,10 +79,11 @@
                 id="algo-choice"
                 role="button"
                 data-toggle="dropdown"
+                title="Change Algorithm"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                Algorithm
+                <i class="fa fa-filter"></i> Algorithm
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <a class="dropdown-item algo-selection" data-algo="dfs"
@@ -81,44 +93,114 @@
                   >Breadth First Search (BFS)</a
                 >
                 <a class="dropdown-item algo-selection" data-algo="bdsBFS"
-                  >Bi Directional Search (BFS)</a
+                  >Bi-Directional Search (BFS)</a
                 >
                 <a class="dropdown-item algo-selection" data-algo="bdsDFS"
-                  >Bi Directional Search (DFS)</a
+                  >Bi-Directional Search (DFS)</a
+                >
+                <a class="dropdown-item algo-selection" data-algo="dijkstra"
+                  >Dijkstra's Algorithm</a
+                >
+                <a class="dropdown-item algo-selection" data-algo="astar"
+                  >A* Algorithm</a
+                >
+                <a class="dropdown-item algo-selection" data-algo="unknown"
+                  >Unknown Algorithm</a
                 >
               </div>
             </li>
             <li class="nav-item dropdown">
               <a
                 class="nav-link dropdown-toggle"
-                href="#"
                 id="algo-choice"
                 role="button"
                 data-toggle="dropdown"
+                title="Change Speed"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                Speed
+                <i class="fa fa-tachometer"></i> Speed
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item speed-selection" data-speed="Fast"
-                  >Fast</a
-                >
-                <a class="dropdown-item speed-selection" data-speed="Medium"
-                  >Medium</a
-                >
-                <a class="dropdown-item speed-selection" data-speed="Slow"
-                  >Slow</a
-                >
+                <a class="dropdown-item speed-selection" data-speed="Fast">
+                  Fast
+                </a>
+                <a class="dropdown-item speed-selection" data-speed="Medium">
+                  Medium
+                </a>
+                <a class="dropdown-item speed-selection" data-speed="Slow">
+                  Slow
+                </a>
+                <a class="dropdown-item speed-selection" data-speed="Step">
+                  Step Mode
+                </a>
               </div>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" onclick="openFullscreen()">Full Screen</a>
+            <li class="nav-item dropdown d-none d-md-block">
+              <a
+                class="nav-link dropdown-toggle"
+                role="button"
+                data-toggle="dropdown"
+              >
+                <i class="fa fa-cog"></i> Settings
+              </a>
+              <div class="dropdown-menu">
+                <!-- rows input -->
+                <div class="p-2 d-none d-md-block">
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm"
+                        >Rows</span
+                      >
+                    </div>
+                    <input type="text" class="form-control" id="row-count" />
+                  </div>
+                </div>
+                <!-- column input -->
+                <div class="p-2 d-none d-md-block">
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm"
+                        >Columns</span
+                      >
+                    </div>
+                    <input type="text" class="form-control" id="column-count" />
+                  </div>
+                </div>
+                <!-- boxsize input -->
+                <div class="p-2 d-none d-md-block">
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm"
+                        >Box Size</span
+                      >
+                    </div>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="box-size"
+                      value="0"
+                      placeholder="0 = auto"
+                    />
+                  </div>
+                </div>
+              </div>
             </li>
-            <li class="nav-item d-none mt-md-0 mt-2 action-panel">
-              <button class="btn btn-outline-primary px-5 start-stop-btn">
-                Visualize
-              </button>
+            <li class="nav-item d-md-none">
+              <a class="nav-link" onclick="openFullscreen()">
+                <i class="fa fa-expand"></i> Full Screen</a
+              >
+            </li>
+            <li class="nav-item d-none mt-md-0 py-1 action-panel mx-auto">
+              <div class="d-none d-md-block">
+                <button class="btn btn-warning btn-sm px-5 start-stop-btn">
+                  Visualize
+                </button>
+                <button class="btn btn-white btn-sm next-step">
+                  <i class="fa fa-step-forward"></i>
+                  Next Step
+                </button>
+              </div>
             </li>
           </ul>
         </div>
@@ -127,7 +209,6 @@
         <section id="toolbar">
           <div class="d-flex row justify-content-center px-2">
             <div class="pb-0 p-2">
-              Mode
               <div
                 class="btn-group btn-group-sm btn-group-toggle"
                 role="group"
@@ -146,6 +227,7 @@
                     autocomplete="off"
                     checked
                   />
+                  <i class="fa fa-square"></i>
                   Wall Block
                 </label>
                 <label
@@ -176,52 +258,18 @@
                 </label>
               </div>
             </div>
-            <!-- rows input -->
-            <div class="p-2 d-none d-md-block">
-              <div class="input-group input-group-sm">
-                <div class="input-group-prepend">
-                  <span class="input-group-text" id="inputGroup-sizing-sm"
-                    >Rows</span
-                  >
-                </div>
-                <input type="text" class="form-control" id="row-count" />
-              </div>
-            </div>
-            <!-- column input -->
-            <div class="p-2 d-none d-md-block">
-              <div class="input-group input-group-sm">
-                <div class="input-group-prepend">
-                  <span class="input-group-text" id="inputGroup-sizing-sm"
-                    >Columns</span
-                  >
-                </div>
-                <input type="text" class="form-control" id="column-count" />
-              </div>
-            </div>
-            <!-- boxsize input -->
-            <div class="p-2 d-none d-md-block">
-              <div class="input-group input-group-sm">
-                <div class="input-group-prepend">
-                  <span class="input-group-text" id="inputGroup-sizing-sm"
-                    >Box Size</span
-                  >
-                </div>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="box-size"
-                  value="0"
-                  placeholder="0 = auto"
-                />
-              </div>
-            </div>
             <!-- algorithm name display and clear graph btn -->
             <div
               class="pb-0 p-2 d-flex justify-content-center align-items-center"
             >
               <small class="mx-auto">
                 <b data-toggle="tooltip" title="Selected Algorithm">Algo: </b>
-                <span id="selected-algo-name">...</span>&nbsp;
+                <span
+                  id="selected-algo-name"
+                  data-toggle="tooltip"
+                  data-title="Dijkstra's Algorithm"
+                  >...</span
+                >&nbsp;
                 <b data-toggle="tooltip" title="Traversing Speed">Speed: </b>
                 <span id="selected-speed-name">Fast</span>&nbsp;
                 <b

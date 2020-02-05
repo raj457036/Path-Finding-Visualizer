@@ -15,7 +15,8 @@ const states = Object.freeze({
   algoNameDisplay: $("#selected-algo-name"),
   speedNameDisplay: $("#selected-speed-name"),
   runnerDuration: $("#runner-duration"),
-  DEFAULT_RUNNER_CODE: "dfs",
+  nextStepBtn: $(".next-step"),
+  DEFAULT_RUNNER_CODE: "astar",
   MAX_END_NODE_COUNT: 3,
   DEFAULT_BOX_SIZE: window.innerWidth > 600 ? 40 : 24,
   COLORS: Object.freeze({
@@ -45,13 +46,17 @@ const states = Object.freeze({
   RunnerSpeeds: Object.freeze({
     Fast: 0,
     Medium: 256,
-    Slow: 512
+    Slow: 512,
+    Step: null
   }),
   Runners: Object.freeze({
     dfs: DfsRunner,
     bfs: BfsRunner,
     bdsBFS: BdsRunnerBFS,
-    bdsDFS: BdsRunnerDFS
+    bdsDFS: BdsRunnerDFS,
+    dijkstra: DijkstraRunner,
+    astar: AstarRunner,
+    unknown: UnknownRunner
   }),
   Context: {
     ActiveGrid: null,

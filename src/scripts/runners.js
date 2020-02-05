@@ -21,14 +21,19 @@ class Runner {
       this.fixedRecall();
       return;
     }
-    this.timer = setTimeout(() => this.recall(), this.__speed);
+    this.__speed != null
+      ? (this.timer = setTimeout(() => this.recall(), this.__speed))
+      : null;
   }
 
   init() {
     this.finish = false;
     this.onStart ? this.onStart() : null;
     this.firstFrame();
-    this.timer = setTimeout(() => this.recall(), this.__speed);
+
+    this.__speed != null
+      ? (this.timer = setTimeout(() => this.recall(), this.__speed))
+      : null;
     this.__startTime = new Date().getTime();
   }
 
@@ -42,6 +47,10 @@ class Runner {
         clearInterval(this.fixedTimer);
       }
     }, this.__speed);
+  }
+
+  nextStep() {
+    if (!this.finish) this.recall();
   }
 
   resume() {
@@ -218,7 +227,7 @@ class BfsRunner extends NodeSetter {
 // Bi-Directional Search (BFS)
 class BdsRunnerBFS extends NodeSetter {
   constructor() {
-    super("Bi-Directional Search(BFS)");
+    super("Bi-Directional Search (BFS)");
     this.squeue = null;
     this.equeue = null;
     this.parent = null;
@@ -379,6 +388,300 @@ class BdsRunnerDFS extends NodeSetter {
         if (!this.eparent.has(r.id)) {
           this.eparent.set(r.id, enode);
           this.estack.push(r);
+        }
+      });
+    } else {
+      this.done();
+      return;
+    }
+  }
+
+  fixedFrames() {
+    const n = this.path.pop();
+    n.setAsPath();
+  }
+}
+
+// Dijkstra's Single Source shortest path
+class DijkstraRunner extends NodeSetter {
+  constructor() {
+    super("Dijkstra's Algorithm");
+    this.visitedNodes = null;
+    this.notVisitedNodes = null;
+    this.distance = null;
+    this.path = null;
+    this.parent = null;
+  }
+
+  getMinDistNode() {
+    let min = Infinity;
+    let min_node = null;
+    this.distance.forEach((distance, node) => {
+      if (distance < min && !this.visitedNodes.has(node)) {
+        min = distance;
+        min_node = node;
+      }
+    });
+
+    return [min, min_node];
+  }
+
+  mapPath() {
+    this.path = [];
+
+    let node = this.endNode;
+
+    while (node && node != this.startNode) {
+      this.path.push(node);
+      node = this.parent.get(node.id);
+    }
+    this.count = this.path.length;
+  }
+
+  firstFrame() {
+    this.visitedNodes = new Set();
+    this.notVisitedNodes = new Set([this.startNode]);
+    this.distance = new Map();
+    this.distance.set(this.startNode, 0);
+    this.parent = new Map();
+  }
+
+  perFrame() {
+    const [min_dist, min_node] = this.getMinDistNode();
+    this.visitedNodes.add(min_node);
+    min_node ? min_node.changeText(min_dist) : null;
+    if (!min_node) {
+      this.done();
+      return;
+    }
+    if (min_node == this.endNode) {
+      this.done();
+      this.mapPath();
+      return;
+    }
+    this.notVisitedNodes.delete(min_node);
+    min_node.adjacents.forEach(n => this.notVisitedNodes.add(n));
+
+    min_node != this.startNode && min_node != this.endNode
+      ? min_node.setAsTraversed()
+      : null;
+
+    this.notVisitedNodes.forEach(node => {
+      const dist = this.distance.get(node) || Infinity;
+
+      if (!this.visitedNodes.has(node) && dist > min_dist + 1) {
+        this.distance.set(node, min_dist + 1);
+        this.parent.set(node.id, min_node);
+      }
+    });
+  }
+
+  fixedFrames() {
+    const u = this.path.pop();
+    u.setAsPath();
+  }
+}
+
+// A* Algorithm
+class AstarRunner extends NodeSetter {
+  constructor() {
+    super("A* Algoritm");
+    this.hMap = null;
+    this.gMap = null;
+    this.fMap = null;
+    this.openSet = null;
+    this.closeSet = null;
+    this.parent = null;
+  }
+
+  g(n) {
+    return this.gMap.get(n);
+  }
+
+  h(n) {
+    const dist =
+      Math.abs(this.endNode.value[0] - n.value[0]) +
+      Math.abs(this.endNode.value[1] - n.value[1]);
+    return 5 * dist;
+  }
+
+  f(n) {
+    const fScore = this.fMap.get(n);
+
+    if (fScore != null) {
+      return fScore;
+    }
+    return Infinity;
+  }
+
+  getLeastFNode() {
+    let min_fScore = Infinity;
+    let min_fScore_node = null;
+
+    this.openSet.forEach(node => {
+      const fScore = this.f(node);
+      if (fScore < min_fScore) {
+        min_fScore = fScore;
+        min_fScore_node = node;
+      }
+    });
+
+    return [min_fScore, min_fScore_node];
+  }
+
+  mapPath() {
+    this.path = [];
+
+    let node = this.endNode;
+
+    while (node && node != this.startNode) {
+      this.path.push(node);
+      node = this.parent.get(node.id);
+    }
+    this.count = this.path.length;
+  }
+
+  firstFrame() {
+    this.gMap = new Map();
+    this.fMap = new Map();
+    this.closeSet = new Set();
+    this.openSet = new Set([this.startNode]);
+    this.gMap.set(this.startNode, 0);
+    this.fMap.set(this.startNode, this.h(this.startNode));
+    this.parent = new Map();
+  }
+
+  perFrame() {
+    if (this.openSet.size > 0) {
+      const [current_score, current_node] = this.getLeastFNode();
+
+      if (current_node == this.endNode) {
+        this.done();
+        this.mapPath();
+        return;
+      }
+      current_node != this.startNode ? current_node.setAsTraversed() : null;
+
+      current_node.changeText(Math.round(current_score));
+
+      this.closeSet.add(current_node);
+      this.openSet.delete(current_node);
+
+      current_node.adjacents.forEach(node => {
+        const gScore = this.g(current_node) + 1;
+
+        if (gScore < this.g(node) || Infinity) {
+          this.gMap.set(node, gScore);
+          this.fMap.set(node, gScore + this.h(node));
+
+          if (!this.closeSet.has(node)) {
+            this.openSet.add(node);
+            this.parent.set(node.id, current_node);
+          }
+        }
+      });
+    } else {
+      this.done();
+      return;
+    }
+  }
+
+  fixedFrames() {
+    const n = this.path.pop();
+    n.setAsPath();
+  }
+}
+
+// unknown
+class UnknownRunner extends NodeSetter {
+  constructor() {
+    super("Unknown Algoritm");
+    this.visitedNodes = null;
+    this.notVisitedNodes = null;
+    this.weights = null;
+    this.parent = null;
+    this.path = null;
+  }
+
+  g(n) {
+    const cost = this.weights.get(n);
+    if (cost != null) {
+      return cost;
+    }
+
+    return Infinity;
+  }
+
+  h(n) {
+    if (this.endNode.value[0] > this.endNode.value[1]) {
+      return Math.abs(this.endNode.value[0] - n.value[0]);
+    } else {
+      return Math.abs(this.endNode.value[1] - n.value[1]);
+    }
+  }
+
+  f(n) {
+    return this.h(n) - this.g(n);
+  }
+
+  getLeastFNode() {
+    let min = Infinity;
+    let min_node = null;
+    this.notVisitedNodes.forEach(node => {
+      const cost = this.f(node);
+
+      if (cost < min) {
+        min = cost;
+        min_node = node;
+      }
+    });
+
+    return [min, min_node];
+  }
+
+  mapPath() {
+    this.path = [];
+
+    let node = this.endNode;
+
+    while (node && node != this.startNode) {
+      this.path.push(node);
+      node = this.parent.get(node.id);
+    }
+    console.log(this.path.length);
+    this.count = this.path.length;
+  }
+
+  firstFrame() {
+    this.visitedNodes = new Set();
+    this.notVisitedNodes = new Set([this.startNode]);
+    this.weights = new Map();
+    this.weights.set(this.startNode, 0);
+    this.parent = new Map();
+  }
+
+  perFrame() {
+    if (this.notVisitedNodes.size > 0) {
+      const [cost, least_f_node] = this.getLeastFNode();
+
+      this.visitedNodes.add(least_f_node);
+      this.notVisitedNodes.delete(least_f_node);
+
+      if (!least_f_node || least_f_node == this.endNode) {
+        this.done();
+        this.mapPath();
+        return;
+      }
+
+      least_f_node != this.startNode ? least_f_node.setAsTraversed() : null;
+      least_f_node.changeText(Math.round(cost));
+
+      least_f_node.adjacents.forEach(node => {
+        const wt = this.weights.get(node) || Infinity;
+        if (wt > cost + 1 && !this.visitedNodes.has(node)) {
+          this.weights.set(node, cost + 1);
+          this.notVisitedNodes.add(node);
+          this.parent.set(node.id, least_f_node);
         }
       });
     } else {

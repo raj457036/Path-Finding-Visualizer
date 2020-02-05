@@ -6,6 +6,15 @@ class Box extends GraphNode {
     this.pointBR = null;
     this.nodeType = states.BOX_TYPES.CLEAR;
     this.__path = null;
+    this.__centerText = null;
+  }
+
+  changeText(text) {
+    this.__centerText.content = `${text}`;
+  }
+
+  resetText() {
+    this.__centerText.content = "";
   }
 
   setAsStart() {
@@ -45,6 +54,7 @@ class Box extends GraphNode {
   setAsClear() {
     this.nodeType = states.BOX_TYPES.CLEAR;
     this.__path.fillColor = states.COLORS.BOX_TYPE_CLEAR_COLOR;
+    this.resetText();
   }
 
   setAsBlock() {
@@ -56,7 +66,7 @@ class Box extends GraphNode {
       {
         fillColor: states.COLORS.BOX_TYPE_BLOCK_COLORS[1]
       },
-      600
+      300
     );
   }
 
@@ -88,7 +98,7 @@ class Box extends GraphNode {
         {
           fillColor: states.COLORS.BOX_TYPE_PATH_NODE_COLORS[1]
         },
-        300
+        200
       );
     }
   }
@@ -99,19 +109,6 @@ class Box extends GraphNode {
       this.nodeType == states.BOX_TYPES.PATH_NODE
     ) {
       this.setAsClear();
-    }
-  }
-
-  getFillColor() {
-    switch (this.nodeType) {
-      case states.BOX_TYPES.BLOCK:
-        return states.COLORS.BOX_TYPE_BLOCK_COLOR;
-      case states.BOX_TYPES.CLEAR:
-        return states.COLORS.BOX_TYPE_CLEAR_COLOR;
-      case states.BOX_TYPES.START_NODE:
-        return states.COLORS.BOX_TYPE_START_NODE_COLOR;
-      case states.BOX_TYPES.END_NODE:
-        return states.COLORS.BOX_TYPE_END_NODE_COLORS[0];
     }
   }
 
@@ -126,8 +123,14 @@ class Box extends GraphNode {
       to: this.pointBR,
       strokeColor: states.COLORS.BOX_BORDER_COLOR,
       strokeWidth: 0.3,
-      fillColor: this.getFillColor()
+      fillColor: states.COLORS.BOX_TYPE_CLEAR_COLOR
     });
+    this.__centerText = new paper.PointText({
+      point: this.__path.bounds.center,
+      fillColor: "black",
+      justification: "center"
+    });
+    this.__path.addChild(this.__centerText);
   }
 
   get path() {
@@ -146,6 +149,8 @@ class Grid {
     this.__start_node = null;
     this.__end_node = null;
     this.__action_mode = states.TOOL_MODE.WALL_NODES;
+    this.__wallA = null;
+    this.__wallB = null;
     this.onStartEndSet = () => {};
     this.onRunnerStop = () => {};
     this.onRunnerStart = () => {};
@@ -166,24 +171,23 @@ class Grid {
 
     switch (this.__action_mode) {
       case states.TOOL_MODE.START_NODE:
-        if (!this.runner.running) {
+        if (!this.runner.running && box != this.endNode) {
           this.__start_node = box;
           this.setStart();
         }
         break;
       case states.TOOL_MODE.TARGET_NODE:
-        if (!this.runner.running) {
+        if (!this.runner.running && box != this.startNode) {
           this.__end_node = box;
           this.setEnd();
         }
         break;
       case states.TOOL_MODE.WALL_NODES:
         if (
-          this.runner.running &&
-          (box == this.__start_node ||
-            box == this.__end_node ||
-            box.nodeType == states.BOX_TYPES.TRAVERSED_NODE ||
-            box.nodeType == states.BOX_TYPES.PATH_NODE)
+          box == this.__start_node ||
+          box == this.__end_node ||
+          box.nodeType == states.BOX_TYPES.TRAVERSED_NODE ||
+          box.nodeType == states.BOX_TYPES.PATH_NODE
         ) {
           return;
         }
@@ -229,7 +233,14 @@ class Grid {
         this.boxes[r][c].removeAsStart();
       }
     }
-    this.setClear(...this.startNode.value);
+    if (this.__wallA) {
+      this.setBlock(...this.__wallA.value);
+      this.__wallA = null;
+    }
+    if (this.startNode.nodeType == states.BOX_TYPES.BLOCK) {
+      this.__wallA = this.startNode;
+      this.setClear(...this.startNode.value);
+    }
     this.startNode.setAsStart();
     this.onStartEndSet();
     this.setRunnerNodes();
@@ -262,12 +273,17 @@ class Grid {
         this.boxes[r][c].removeAsEnd();
       }
     }
-    this.setClear(...this.__end_node.value);
+    if (this.__wallB) {
+      this.setBlock(...this.__wallB.value);
+      this.__wallB = null;
+    }
+    if (this.endNode.nodeType == states.BOX_TYPES.BLOCK) {
+      this.__wallB = this.endNode;
+      this.setClear(...this.endNode.value);
+    }
     this.__end_node.setAsEnd();
     this.onStartEndSet();
     this.setRunnerNodes();
-
-    // if(this.)
   }
 
   clearGrid() {
@@ -375,17 +391,23 @@ function processGrid(rowCount, columnCount, width, height, boxSize) {
   };
 
   states.Context.ActiveGrid.onRunnerStop = function() {
-    // states.actionPanel.addClass("d-none");
     states.startStopBtn.text("Visualize").prop("disabled", false);
-    states.resetGraphBtn.show();
-    states.clearGraphBtn.show();
+    states.resetGraphBtn.prop("disabled", false);
+    states.clearGraphBtn.prop("disabled", false);
     states.runnerDuration.text(
       `${states.Context.ActiveGrid.runner.duration} ms`
     );
-    // states.toolModeInput.prop("disabled", false);
-    console.log(states.Context.ActiveGrid.runner.duration);
+    states.nextStepBtn.hide();
   };
   states.algoNameDisplay.text(states.Context.ActiveGrid.runner.name);
+}
+
+function resetGrid() {
+  states.Context.ActiveGrid.resetTraversal();
+  const sn = states.Context.ActiveGrid.startNode;
+  const en = states.Context.ActiveGrid.endNode;
+  sn ? sn.resetText() : null;
+  en ? en.resetText() : null;
 }
 
 function init() {
@@ -396,7 +418,8 @@ function init() {
   states.rowCountInput.val(rowCount);
   states.columnCountInput.val(columnCount);
   states.boxSizeInput.val(boxSize);
-  states.resetGraphBtn.hide();
+  states.resetGraphBtn.prop("disabled", true);
+  states.nextStepBtn.hide();
 
   states.rowCountInput.change(function(event) {
     rowCount = parseInt($(this).val()) || Math.trunc(states.height / t);
@@ -418,14 +441,19 @@ function init() {
     states.startStopBtn.text("Visualize").prop("disabled", false);
   });
   states.resetGraphBtn.click(function(event) {
-    states.Context.ActiveGrid.resetTraversal();
+    resetGrid();
   });
   states.startStopBtn.click(function(event) {
+    if (states.Context.ActiveGrid.runner.speed == states.RunnerSpeeds.Step) {
+      states.nextStepBtn.show();
+    } else {
+      states.nextStepBtn.hide();
+    }
     states.Context.ActiveGrid.visualize();
     states.startStopBtn.text("Running..").prop("disabled", true);
     states.runnerDuration.text("...");
-    states.resetGraphBtn.hide();
-    states.clearGraphBtn.hide();
+    states.resetGraphBtn.prop("disabled", true);
+    states.clearGraphBtn.prop("disabled", true);
   });
   states.algoSelection.click(function(event) {
     const algo = event.target.dataset["algo"];
@@ -436,7 +464,7 @@ function init() {
       states.Context.ActiveGrid.runner.stop();
     }
     states.Context.ActiveGrid.setRunner(algo);
-    states.Context.ActiveGrid.resetTraversal();
+    resetGrid();
     if (
       states.Context.ActiveGrid.startNode &&
       states.Context.ActiveGrid.endNode
@@ -447,9 +475,20 @@ function init() {
   });
 
   states.speedSelection.click(function(event) {
+    const grid = states.Context.ActiveGrid;
     const speed = event.target.dataset["speed"];
-    states.Context.ActiveGrid.setRunnerSpeed(states.RunnerSpeeds[speed]);
+    grid.setRunnerSpeed(states.RunnerSpeeds[speed]);
     states.speedNameDisplay.text(speed);
+    if (speed != "Step") {
+      states.nextStepBtn.hide();
+      !grid.runner.finish ? grid.runner.nextStep() : null;
+    } else if (grid.runner.running) {
+      states.nextStepBtn.show();
+    }
+  });
+
+  states.nextStepBtn.click(function(event) {
+    states.Context.ActiveGrid.runner.nextStep();
   });
 
   processGrid(rowCount, columnCount, states.width, states.height, boxSize);

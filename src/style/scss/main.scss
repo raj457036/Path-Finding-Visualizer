@@ -11,7 +11,7 @@ body {
 .graph {
   background: white;
   border-top: 1px solid grey;
-  height: calc(100vh - 103px) !important;
+  height: calc(100vh - 87px) !important;
 
   canvas[resize] {
     width: 100%;
@@ -21,4 +21,8 @@ body {
 
 a {
   cursor: pointer !important;
+}
+
+.bg-nav {
+  background-color: #00bf8f;
 }
