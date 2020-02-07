@@ -5,8 +5,9 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+      content="width=device-width, user-scalable=no, initial-scale=1, shrink-to-fit=no"
     />
+
     <!-- font awasome -->
     <link
       rel="stylesheet"
@@ -27,14 +28,14 @@
 
   <body>
     <section id="home">
-      <nav class="navbar navbar-expand-lg navbar-light bg-nav py-0">
-        <a class="navbar-brand d-flex">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-nav py-0 sticky-top">
+        <a class="navbar-brand d-flex" href="#grid">
           AlgoViz &nbsp;
-          <div class="d-none action-panel d-md-none ">
+          <div class="d-none action-panel d-lg-none ">
             <button class="btn btn-primary btn-sm start-stop-btn">
               Visualize
             </button>
-            <button class="btn btn-white btn-sm next-step">
+            <button class="btn btn-light btn-sm next-step">
               <i class="fa fa-step-forward"></i>
               Next Step
             </button>
@@ -68,8 +69,28 @@
                 <i class="fa fa-th-large"></i> Create Blocks
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" onclick="fillBlock('fill1')">Fill 1</a>
-                <a class="dropdown-item" onclick="fillBlock('fill2')">Fill 2</a>
+                <a class="dropdown-item disabled" onclick="RandomGrid()"
+                  >Random Grid</a
+                >
+                <div class="dropdown-divider"></div>
+                <h6 class="dropdown-header">Upcoming Updates</h6>
+                <!-- <a class="dropdown-item disabled" href="#"
+                  >DFS Maze Generation</a
+                > -->
+                <!-- <a class="dropdown-item disabled" href="#"
+                  >Recursive backtracker</a
+                > -->
+                <a class="dropdown-item disabled" href="#"
+                  >Randomized Prim's algorithm</a
+                >
+                <a class="dropdown-item disabled" href="#"
+                  >Randomized Kruskal's algorithm</a
+                >
+                <a class="dropdown-item disabled" href="#"
+                  >Recursive Division</a
+                >
+
+                <!-- <a class="dropdown-item" onclick="fillBlock('fill2')">Fill 2</a> -->
               </div>
             </li>
             <li class="nav-item dropdown">
@@ -85,29 +106,95 @@
               >
                 <i class="fa fa-filter"></i> Algorithm
               </a>
-              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item algo-selection" data-algo="dfs"
-                  >Depth First Search (DFS)
-                </a>
-                <a class="dropdown-item algo-selection" data-algo="bfs"
-                  >Breadth First Search (BFS)</a
-                >
-                <a class="dropdown-item algo-selection" data-algo="bdsBFS"
-                  >Bi-Directional Search (BFS)</a
-                >
-                <a class="dropdown-item algo-selection" data-algo="bdsDFS"
-                  >Bi-Directional Search (DFS)</a
-                >
-                <a class="dropdown-item algo-selection" data-algo="dijkstra"
-                  >Dijkstra's Algorithm</a
-                >
-                <a class="dropdown-item algo-selection" data-algo="astar"
-                  >A* Algorithm</a
-                >
-                <a class="dropdown-item algo-selection" data-algo="unknown"
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li>
+                  <a class="dropdown-item algo-selection" data-algo="dfs"
+                    >Depth First Search (DFS)
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item algo-selection" data-algo="bfs"
+                    >Breadth First Search (BFS)</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item algo-selection" data-algo="bdsBFS"
+                    >Bi-Directional Search (BFS)</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item algo-selection" data-algo="bdsDFS"
+                    >Bi-Directional Search (DFS)</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item algo-selection" data-algo="dijkstra"
+                    >Dijkstra's Algorithm (A* with h=0)</a
+                  >
+                </li>
+                <li class="dropdown-submenu">
+                  <a class="dropdown-item dropdown-toggle"
+                    >A* Algorithms (ε =
+                    <span id="admissibleValueDisplay"></span> )</a
+                  >
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a
+                        class="dropdown-item algo-selection"
+                        data-algo="astar"
+                        data-h="manhattan"
+                      >
+                        A* (using Manhattan Heuristic)
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item algo-selection"
+                        data-algo="astar"
+                        data-h="euclidean"
+                      >
+                        A* (using Euclidean Heuristic)
+                      </a>
+                    </li>
+                    <li class="dropdown-submenu">
+                      <a class="dropdown-item dropdown-toggle"
+                        >A* (using Diagonal Heuristic)</a
+                      >
+                      <ul class="dropdown-menu">
+                        <li>
+                          <a
+                            class="dropdown-item algo-selection"
+                            data-algo="astar"
+                            data-h="diagonal"
+                            data-d="1"
+                          >
+                            with Chebyshev distance (D = 1, D2 = 1)
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            class="dropdown-item algo-selection"
+                            data-algo="astar"
+                            data-h="diagonal"
+                            data-d="2"
+                          >
+                            with Octile distance (D = 1, D2 = sqrt(2))
+                          </a>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+
+                <!-- <a class="dropdown-item algo-selection" data-algo="unknown"
                   >Unknown Algorithm</a
+                > -->
+                <div class="dropdown-divider"></div>
+                <h6 class="dropdown-header">Upcoming Updates</h6>
+                <a class="dropdown-item disabled" href="#" data-algo="dfsMaze"
+                  >Best First Search</a
                 >
-              </div>
+              </ul>
             </li>
             <li class="nav-item dropdown">
               <a
@@ -153,7 +240,12 @@
                         >Rows</span
                       >
                     </div>
-                    <input type="text" class="form-control" id="row-count" />
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="row-count"
+                      min="0"
+                    />
                   </div>
                 </div>
                 <!-- column input -->
@@ -164,7 +256,12 @@
                         >Columns</span
                       >
                     </div>
-                    <input type="text" class="form-control" id="column-count" />
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="column-count"
+                      min="0"
+                    />
                   </div>
                 </div>
                 <!-- boxsize input -->
@@ -176,19 +273,39 @@
                       >
                     </div>
                     <input
-                      type="text"
+                      type="number"
                       class="form-control"
                       id="box-size"
                       value="0"
                       placeholder="0 = auto"
+                      min="10"
+                    />
+                  </div>
+                </div>
+                <!-- ε-admissible input -->
+                <div class="p-2 d-none d-md-block">
+                  <div
+                    class="input-group input-group-sm"
+                    data-toggle="tooltip"
+                    data-title="Used for weighted heuristic function hw = ε*ha(n)"
+                  >
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="">ε admissible</span>
+                    </div>
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="admissible-value"
+                      value="5"
+                      min="1"
                     />
                   </div>
                 </div>
               </div>
             </li>
-            <li class="nav-item d-md-none">
+            <li class="nav-item d-lg-none">
               <a class="nav-link" onclick="openFullscreen()">
-                <i class="fa fa-expand"></i> Full Screen</a
+                <i class="fa fa-expand"></i> Toggle Full Screen</a
               >
             </li>
             <li class="nav-item d-none mt-md-0 py-1 action-panel mx-auto">
@@ -290,7 +407,7 @@
             </div>
           </div>
         </section>
-        <section class="graph d-flex justify-content-center row">
+        <section class="graph d-flex justify-content-center row" id="grid">
           <canvas id="graph-canvas" resize></canvas>
         </section>
       </section>
@@ -316,8 +433,10 @@
     ></script>
     <script src="src/scripts/utilities.js"></script>
     <script src="src/scripts/runners.js"></script>
+    <script src="src/scripts/block_generators.js"></script>
     <script src="src/scripts/states.js"></script>
     <script src="src/scripts/graph.js"></script>
+    <script src="src/scripts/grid.js"></script>
     <script src="src/scripts/app.js"></script>
   </body>
 </html>

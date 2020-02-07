@@ -1,12 +1,12 @@
 // Runners
 class Runner {
-  constructor(name, speed) {
+  constructor(name) {
     this.name = name;
     this.timer = null;
     this.fixedTimer = null;
     this.finish = null;
     this.count = 0;
-    this.__speed = speed || 16; // ~60fps
+    this.__speed = 0; // 0 = Max Speed
     this.onStop = null;
     this.onStart = null;
     this.onFrame = null;
@@ -38,13 +38,21 @@ class Runner {
   }
 
   fixedRecall() {
-    let i = this.count;
+    if (!this.count) {
+      this.onStop ? this.onStop() : null;
+    }
+    let i =
+      this.count > states.MAX_FIXED_FRAME_COUNT
+        ? states.MAX_FIXED_FRAME_COUNT
+        : this.count;
     this.fixedTimer = setInterval(() => {
       if (i > 0) {
         this.fixedFrames();
         i--;
       } else {
         clearInterval(this.fixedTimer);
+        this.fixedTimer = null;
+        this.onStop ? this.onStop() : null;
       }
     }, this.__speed);
   }
@@ -67,7 +75,7 @@ class Runner {
     clearTimeout(this.timer);
     this.timer = null;
     this.__endTime = new Date().getTime();
-    this.onStop ? this.onStop() : null;
+    // this.onStop ? this.onStop() : null;
   }
 
   firstFrame() {
@@ -83,7 +91,7 @@ class Runner {
   }
 
   get running() {
-    return this.timer != null ? true : false;
+    return this.timer != null || this.fixedTimer != null ? true : false;
   }
 
   get speed() {
@@ -121,6 +129,7 @@ class DfsRunner extends NodeSetter {
     super("Depth First Search");
     this.stack = null;
     this.path = null;
+    this.visitedNodes = null;
     this.parent = null;
   }
 
@@ -131,27 +140,36 @@ class DfsRunner extends NodeSetter {
       this.path.push(node);
       node = this.parent.get(node.id);
     }
+
+    this.endNode.changeText(this.path.length);
     this.count = this.path.length;
   }
 
   firstFrame() {
     this.stack = new Stack();
     this.parent = new Map();
+    this.visitedNodes = new Set();
     this.stack.push(this.startNode);
   }
 
   perFrame() {
     if (this.stack.size > 0) {
-      const node = this.stack.pop();
-      if (node.id == this.endNode.id) {
+      let node = this.stack.pop();
+      while (node && this.visitedNodes.has(node)) {
+        node = this.stack.pop();
+      }
+
+      if (node == this.endNode) {
         this.done();
         this.mapPath();
         return;
       }
-      node.id != this.startNode.id ? node.setAsTraversed() : null;
+
+      node != this.startNode ? node.setAsTraversed() : null;
+      this.visitedNodes.add(node);
 
       node.adjacents.forEach(r => {
-        if (!this.parent.has(r.id)) {
+        if (!this.visitedNodes.has(r)) {
           this.parent.set(r.id, node);
           this.stack.push(r);
         }
@@ -185,6 +203,7 @@ class BfsRunner extends NodeSetter {
       this.path.push(node);
       node = this.parent.get(node.id);
     }
+    this.endNode.changeText(this.path.length);
     this.count = this.path.length;
   }
 
@@ -255,6 +274,7 @@ class BdsRunnerBFS extends NodeSetter {
 
     this.path = [...pathB.reverse(), ...pathA];
 
+    this.endNode.changeText(this.path.length);
     this.count = this.path.length;
   }
 
@@ -319,6 +339,8 @@ class BdsRunnerDFS extends NodeSetter {
     super("Bi-Directional Search (DFS)");
     this.sstack = null;
     this.estack = null;
+    this.sVisitedNodes = null;
+    this.eVisitedNodes = null;
     this.parent = null;
     this.eparent = null;
     this.path = null;
@@ -344,6 +366,7 @@ class BdsRunnerDFS extends NodeSetter {
 
     this.path = [...pathB.reverse(), ...pathA];
 
+    this.endNode.changeText(this.path.length);
     this.count = this.path.length;
   }
 
@@ -351,6 +374,8 @@ class BdsRunnerDFS extends NodeSetter {
     this.meetingNode = null;
     this.sstack = new Stack();
     this.estack = new Stack();
+    this.eVisitedNodes = new Set();
+    this.sVisitedNodes = new Set();
     this.sparent = new Map();
     this.eparent = new Map();
     this.sstack.push(this.startNode);
@@ -359,15 +384,29 @@ class BdsRunnerDFS extends NodeSetter {
 
   perFrame() {
     if (this.sstack.size > 0 && this.estack.size > 0) {
-      const snode = this.sstack.pop();
-      const enode = this.estack.pop();
+      let snode = this.sstack.pop();
+      let enode = this.estack.pop();
+
+      while (snode && this.sVisitedNodes.has(snode)) {
+        snode = this.sstack.pop();
+      }
+      while (enode && this.eVisitedNodes.has(enode)) {
+        enode = this.estack.pop();
+      }
+      if (!enode || !snode) {
+        this.done();
+        return;
+      }
 
       snode != this.startNode ? snode.setAsTraversed() : null;
       enode != this.endNode ? enode.setAsTraversed() : null;
 
-      if (this.sparent.has(enode.id) && !this.eparent.has(snode.id)) {
+      if (this.sVisitedNodes.has(enode) && !this.eVisitedNodes.has(snode)) {
         this.meetingNode = enode;
-      } else if (this.eparent.has(snode.id) && !this.sparent.has(enode.id)) {
+      } else if (
+        this.eVisitedNodes.has(snode) &&
+        !this.sVisitedNodes.has(enode)
+      ) {
         this.meetingNode = snode;
       }
 
@@ -377,17 +416,20 @@ class BdsRunnerDFS extends NodeSetter {
         return;
       }
 
-      snode.adjacents.forEach(r => {
-        if (!this.sparent.has(r.id)) {
-          this.sparent.set(r.id, snode);
-          this.sstack.push(r);
+      this.sVisitedNodes.add(snode);
+      this.eVisitedNodes.add(enode);
+
+      snode.adjacents.forEach(node => {
+        if (!this.sVisitedNodes.has(node)) {
+          this.sstack.push(node);
+          this.sparent.set(node.id, snode);
         }
       });
 
-      enode.adjacents.forEach(r => {
-        if (!this.eparent.has(r.id)) {
-          this.eparent.set(r.id, enode);
-          this.estack.push(r);
+      enode.adjacents.forEach(node => {
+        if (!this.eVisitedNodes.has(node)) {
+          this.eparent.set(node.id, enode);
+          this.estack.push(node);
         }
       });
     } else {
@@ -483,15 +525,50 @@ class DijkstraRunner extends NodeSetter {
 }
 
 // A* Algorithm
+function getName(h) {
+  switch (h) {
+    case "manhattan":
+      return "A* Algorithm (Manhattan Heuristic)";
+    case "euclidean":
+      return "A* Algorithm (Euclidean Heuristic)";
+    case "diagonal":
+      return "A* Algorithm (Diagonal Heuristics)";
+  }
+}
+
 class AstarRunner extends NodeSetter {
-  constructor() {
-    super("A* Algoritm");
+  constructor(extra) {
+    super(getName(extra.h));
     this.hMap = null;
     this.gMap = null;
     this.fMap = null;
     this.openSet = null;
     this.closeSet = null;
     this.parent = null;
+    this.extra = extra;
+  }
+
+  manhattanH(n) {
+    return (
+      Math.abs(n.value[0] - this.endNode.value[0]) +
+      Math.abs(n.value[1] - this.endNode.value[1])
+    );
+  }
+
+  euclideanH(n) {
+    return Math.sqrt(
+      Math.pow(n.value[0] - this.endNode.value[0], 2) +
+        Math.pow(n.value[1] - this.endNode.value[1], 2)
+    );
+  }
+
+  diagonalH(n) {
+    const dx = Math.abs(n.value[0] - this.endNode.value[0]);
+    const dy = Math.abs(n.value[1] - this.endNode.value[1]);
+
+    const D2 = this.extra.d == 2 ? Math.sqrt(2) : 1;
+
+    return D * (dx + dy) + (D2 - 2 * D) * Math.min(dx, dy);
   }
 
   g(n) {
@@ -499,10 +576,14 @@ class AstarRunner extends NodeSetter {
   }
 
   h(n) {
-    const dist =
-      Math.abs(this.endNode.value[0] - n.value[0]) +
-      Math.abs(this.endNode.value[1] - n.value[1]);
-    return 5 * dist;
+    switch (this.extra.h) {
+      case "manhattan":
+        return states.Context.AdmissibleValue * this.manhattanH(n);
+      case "euclidean":
+        return states.Context.AdmissibleValue * this.euclideanH(n);
+      case "diagonal":
+        return states.Context.AdmissibleValue * this.diagonalH(n);
+    }
   }
 
   f(n) {
@@ -526,7 +607,7 @@ class AstarRunner extends NodeSetter {
       }
     });
 
-    return [min_fScore, min_fScore_node];
+    return min_fScore_node;
   }
 
   mapPath() {
@@ -553,30 +634,35 @@ class AstarRunner extends NodeSetter {
 
   perFrame() {
     if (this.openSet.size > 0) {
-      const [current_score, current_node] = this.getLeastFNode();
+      const current_node = this.getLeastFNode();
+
+      current_node.changeText(this.g(current_node));
 
       if (current_node == this.endNode) {
         this.done();
         this.mapPath();
         return;
       }
-      current_node != this.startNode ? current_node.setAsTraversed() : null;
 
-      current_node.changeText(Math.round(current_score));
+      current_node != this.startNode ? current_node.setAsTraversed() : null;
 
       this.closeSet.add(current_node);
       this.openSet.delete(current_node);
 
       current_node.adjacents.forEach(node => {
-        const gScore = this.g(current_node) + 1;
-
-        if (gScore < this.g(node) || Infinity) {
-          this.gMap.set(node, gScore);
-          this.fMap.set(node, gScore + this.h(node));
-
-          if (!this.closeSet.has(node)) {
-            this.openSet.add(node);
+        if (!this.closeSet.has(node)) {
+          const gScore = this.g(current_node) + 1;
+          if (!this.openSet.has(node)) {
             this.parent.set(node.id, current_node);
+            this.gMap.set(node, gScore);
+            this.fMap.set(node, gScore + this.h(node));
+            this.openSet.add(node);
+          } else {
+            if (gScore < this.g(node)) {
+              this.parent.set(node.id, current_node);
+              this.gMap.set(node, this.g(current_node) + 1);
+              this.fMap.set(node, this.g(node) + this.h(node));
+            }
           }
         }
       });
@@ -596,47 +682,6 @@ class AstarRunner extends NodeSetter {
 class UnknownRunner extends NodeSetter {
   constructor() {
     super("Unknown Algoritm");
-    this.visitedNodes = null;
-    this.notVisitedNodes = null;
-    this.weights = null;
-    this.parent = null;
-    this.path = null;
-  }
-
-  g(n) {
-    const cost = this.weights.get(n);
-    if (cost != null) {
-      return cost;
-    }
-
-    return Infinity;
-  }
-
-  h(n) {
-    if (this.endNode.value[0] > this.endNode.value[1]) {
-      return Math.abs(this.endNode.value[0] - n.value[0]);
-    } else {
-      return Math.abs(this.endNode.value[1] - n.value[1]);
-    }
-  }
-
-  f(n) {
-    return this.h(n) - this.g(n);
-  }
-
-  getLeastFNode() {
-    let min = Infinity;
-    let min_node = null;
-    this.notVisitedNodes.forEach(node => {
-      const cost = this.f(node);
-
-      if (cost < min) {
-        min = cost;
-        min_node = node;
-      }
-    });
-
-    return [min, min_node];
   }
 
   mapPath() {
@@ -648,40 +693,51 @@ class UnknownRunner extends NodeSetter {
       this.path.push(node);
       node = this.parent.get(node.id);
     }
-    console.log(this.path.length);
     this.count = this.path.length;
   }
 
   firstFrame() {
-    this.visitedNodes = new Set();
-    this.notVisitedNodes = new Set([this.startNode]);
-    this.weights = new Map();
-    this.weights.set(this.startNode, 0);
+    this.gMap = new Map();
+    this.fMap = new Map();
+    this.closeSet = new Set();
+    this.openSet = new Set([this.startNode]);
+    this.gMap.set(this.startNode, 0);
+    this.fMap.set(this.startNode, this.h(this.startNode));
     this.parent = new Map();
   }
 
   perFrame() {
-    if (this.notVisitedNodes.size > 0) {
-      const [cost, least_f_node] = this.getLeastFNode();
+    if (this.openSet.size > 0) {
+      const current_node = this.getLeastFNode();
 
-      this.visitedNodes.add(least_f_node);
-      this.notVisitedNodes.delete(least_f_node);
+      current_node.changeText(this.g(current_node));
 
-      if (!least_f_node || least_f_node == this.endNode) {
+      if (current_node == this.endNode) {
         this.done();
         this.mapPath();
         return;
       }
 
-      least_f_node != this.startNode ? least_f_node.setAsTraversed() : null;
-      least_f_node.changeText(Math.round(cost));
+      current_node != this.startNode ? current_node.setAsTraversed() : null;
 
-      least_f_node.adjacents.forEach(node => {
-        const wt = this.weights.get(node) || Infinity;
-        if (wt > cost + 1 && !this.visitedNodes.has(node)) {
-          this.weights.set(node, cost + 1);
-          this.notVisitedNodes.add(node);
-          this.parent.set(node.id, least_f_node);
+      this.closeSet.add(current_node);
+      this.openSet.delete(current_node);
+
+      current_node.adjacents.forEach(node => {
+        if (!this.closeSet.has(node)) {
+          const gScore = this.g(current_node) + 1;
+          if (!this.openSet.has(node)) {
+            this.parent.set(node.id, current_node);
+            this.gMap.set(node, gScore);
+            this.fMap.set(node, this.h(node) + gScore);
+            this.openSet.add(node);
+          } else {
+            if (gScore < this.g(node)) {
+              this.parent.set(node.id, current_node);
+              this.gMap.set(node, this.g(current_node) + 1);
+              this.fMap.set(node, this.h(node) + this.g(node));
+            }
+          }
         }
       });
     } else {

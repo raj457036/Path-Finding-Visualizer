@@ -2,10 +2,15 @@ html,
 body {
   height: 100%;
   background-color: white;
+  scroll-behavior: smooth;
 
   #home {
     background-color: inherit;
   }
+}
+
+nav {
+  touch-action: manipulation;
 }
 
 .graph {
@@ -24,5 +29,23 @@ a {
 }
 
 .bg-nav {
-  background-color: #00bf8f;
+  background: linear-gradient(to top right, #00bf8f, #102d58);
+}
+
+.dropdown-submenu {
+  position: relative;
+}
+
+.dropdown-submenu a::after {
+  transform: rotate(-90deg);
+  position: absolute;
+  right: 6px;
+  top: 0.8em;
+}
+
+.dropdown-submenu .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-left: 0.1rem;
+  margin-right: 0.1rem;
 }
