@@ -158,6 +158,10 @@ class DfsRunner extends NodeSetter {
       while (node && this.visitedNodes.has(node)) {
         node = this.stack.pop();
       }
+      if (!node) {
+        this.done();
+        return;
+      }
 
       if (node == this.endNode) {
         this.done();
