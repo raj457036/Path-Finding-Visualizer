@@ -569,7 +569,7 @@ class AstarRunner extends NodeSetter {
   diagonalH(n) {
     const dx = Math.abs(n.value[0] - this.endNode.value[0]);
     const dy = Math.abs(n.value[1] - this.endNode.value[1]);
-
+    const D = 1;
     const D2 = this.extra.d == 2 ? Math.sqrt(2) : 1;
 
     return D * (dx + dy) + (D2 - 2 * D) * Math.min(dx, dy);
