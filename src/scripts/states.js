@@ -21,7 +21,7 @@ const states = Object.freeze({
   DEFAULT_RUNNER_CODE: "dfs",
   MAX_END_NODE_COUNT: 3,
   MAX_FIXED_FRAME_COUNT: 400,
-  DEFAULT_BOX_SIZE: window.innerWidth > 600 ? 40 : 24,
+  DEFAULT_BOX_SIZE: window.innerWidth > 600 ? 40 : 30,
   COLORS: Object.freeze({
     BOX_BORDER_COLOR: "#192965",
     BOX_TYPE_BLOCK_COLORS: ["#00bf8f", "#102d58"],
