@@ -220,12 +220,17 @@ class BfsRunner extends NodeSetter {
   perFrame() {
     if (this.queue.size > 0) {
       const node = this.queue.dequeue();
+      if (!node) {
+        this.done();
+        return;
+      }
 
       if (node.id == this.endNode.id) {
         this.done();
         this.mapPath();
         return;
       }
+      
 
       node.id != this.startNode.id ? node.setAsTraversed() : null;
       node.adjacents.forEach(r => {
