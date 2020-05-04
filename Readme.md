@@ -1,6 +1,6 @@
 # AlgoViz - Graph Path Visualizer
 
-An easy to use Interactive Graph Path visualizer with batteries included to implement your own Algorithm.
+An easy to use Interactive Graph Path visualizer with batteries included implementing your own Algorithm.
 
 ### Try (use Safari or Chorme or Firefox): [Here](https://raj457036.github.io/AlgoViz-PathFindingVisualizer)
 
@@ -8,11 +8,11 @@ An easy to use Interactive Graph Path visualizer with batteries included to impl
 
 ## Features
 
-1. Interative with Touch/Pen Input supported
-2. Fully optimized for low end Mobiles and Tablet devices.
+1. Interactive with Touch/Pen Input supported
+2. Fully optimized for low-end Mobiles and Tablet devices.
 3. Responsive Design
 4. All the Basic and Advance Path Finding algorithms
-5. Easy to extend Api to check your own path finding algorithm
+5. Easy to extend API to check your own pathfinding algorithm
 6. Fast, Medium, Slow and Step Wise execution for better understanding of Algorithm.
 7. Customizable Grid system (Colors, Execution Speed, Pause, Resume, Stop)
 8. Some of Maze Generation Algorithms included (more coming soon)
@@ -45,12 +45,12 @@ _Use Latest Chrome/ Chromium Browsers/ Safari (mobile/ Tablets/ Desktop)_
 ### How To Implement My Own Algorithm
 
 AlgoViz's all the algorithms are based on Runner class
-its a simple class with three main methods
+it's a simple class with three main methods
 
 **Note**
-Runner work as a delayed loops (why? to animate the progress and have more control over the process)
+Runner work as a delayed loop (why? to animate the progress and have more control over the process)
 
-Also it helps in **Step mode** execution (step by step execution)
+Also, it helps in **Step mode** execution (step by step execution)
 
 - **`constructor`**
   - declare all the needed variables here
@@ -64,9 +64,9 @@ Also it helps in **Step mode** execution (step by step execution)
 
 - **`fixedFrame()`**
   - this function run for limited number(upto `this.count`) of count after `this.done()` is called
-  - run any other pre-processing tast after `this.done` (like tracing a path in a list) and updating `this.count` value
+  - run any other pre-processing test after `this.done` (like tracing a path in a list) and updating `this.count` value
 
-**After you done with your runner's implementation just add it to Runners List in `states` consant and add it to "Algorithm" list in index.html**
+**After you done with your runner's implementation just add it to Runners List in `states` consent and add it to "Algorithm" list in index.html**
 
 ```html
 <a class="nav-link dropdown-toggle"
@@ -240,9 +240,9 @@ utility classes and methods are defined in `utility.js`
 
 - **`processGrid(rowCount, columnCount, width, height, boxSize)`**: will re-paint every thing within confined constraints
 
-* **`resetGrid`**: resets grid (removes box with traversed/path mark and text on boxes)
+* **preset grid`**: resets grid (removes box with traversed/path mark and text on boxes)
 
-- **`init()`**: reinitialize whole page (events, colors, grid, states, etc.)
+- **`init()`**: reinitialize whole page (events, colours, grid, states, etc.)
 
 * **`states`** Object: - `states.js`
   holds states of the app constants, enum, context, elementRef, etc.
