@@ -5,7 +5,7 @@ An easy to use Interactive Graph Path visualizer with batteries included impleme
 
 ### Try (use Safari or Chorme or Firefox): [Here](https://raj457036.github.io/AlgoViz-PathFindingVisualizer)
 
-<img src="src/assets/screenshot.PNG" align="center" style="max-width: 60%">
+<img src="src/assets/Screenshot (1).png" align="center" style="max-width: 60%">
 
 ## Features
 
