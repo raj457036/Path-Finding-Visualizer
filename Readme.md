@@ -1,4 +1,5 @@
 # AlgoViz - Graph Path Visualizer
+# PATH FINDING VISUALIZER
 
 An easy to use Interactive Graph Path visualizer with batteries included implementing your own Algorithm.
 
