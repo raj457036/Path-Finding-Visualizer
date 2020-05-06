@@ -3,7 +3,7 @@
 
 An easy to use Interactive Graph Path visualizer with batteries included implementing your own Algorithm.
 
-### Try (use Safari or Chorme or Firefox): [Here](https://raj457036.github.io/AlgoViz-PathFindingVisualizer)
+### Try (use Safari or Chorme or Firefox): [Here](https://github.com/raj457036/Path-Finding-Visualizer/)
 
 <img src="src/assets/Screenshot (1).png" align="center" style="max-width: 60%">
 
@@ -45,7 +45,7 @@ _Use Latest Chrome/ Chromium Browsers/ Safari (mobile/ Tablets/ Desktop)_
 
 ### How To Implement My Own Algorithm
 
-AlgoViz's all the algorithms are based on Runner class
+PathViz's all the algorithms are based on Runner class
 it's a simple class with three main methods
 
 **Note**
@@ -207,7 +207,7 @@ class DfsRunner extends NodeSetter {
     - `resetTraversed()`: change traversed/path to clear box
 
 - **Grid** -`grid.js`
-  This class is the main class that join all the bits and bytes in AlgoViz
+  This class is the main class that join all the bits and bytes in PathViz
 
   - handles events (click, drag, touch, etc.)
   - handles boxes in good manners
